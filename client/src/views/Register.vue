@@ -3,6 +3,7 @@
     <h2>Register</h2>
     <form @submit.prevent="register">
       <input class="input-field" type="text" v-model="username" placeholder="Username" />
+      <input class="input-field" type="text" v-model="email" placeholder="Email" />
       <input
         class="input-field"
         type="password"
@@ -81,14 +82,14 @@ export default {
   },
   methods: {
     register() {
-      socket.emit("register", { username: this.username, password: this.password });
+      socket.emit("register", { username: this.username, password: this.password, email: this.email });
       socket.on("register", (data) => {
         if (data.success) {
           this.$store.commit("setUserData", data.user);
           this.$store.commit("LogIn", true);
           this.$router.push("/main");
-        } else {
-          alert("Registration failed. Please try again.");
+        } else if (data.error){
+          alert(data.error);
         }
       });
     },

@@ -83,25 +83,14 @@ def handle_login(data):
           "avatar": user[4],
           "discriminator": user[5]
       }
-      cur.execute("SELECT * FROM server_members WHERE user_id=?", (user[0],))
-      rows = cur.fetchall()
-      servers = []
-      for row in rows:
-        cur.execute("SELECT * FROM servers WHERE id=?", (row[1],))
-        server = cur.fetchall()[0]
-        servers.append({
-            "id": server[0],
-            "name": server[1],
-            "owner_id": server[2],
-            "icon": server[3]
-        })
-      emit('login', user_data, servers)
+      emit('login', {'data':user_data})
 
 @socketio.on('register')
 def handle_register(data):
   print('register')
   username = data['username']
   password = data['password']
+  print(password)
   email = data['email']
   with sql.connect("database.db") as con:
     cur = con.cursor()
@@ -119,11 +108,10 @@ def handle_register(data):
 @socketio.on('get_self')
 def handle_get_user(data):
   print('get_self')
-  username = data['username']
-  password = data['password']
+  token = data['token']
   with sql.connect("database.db") as con:
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+    cur.execute("SELECT * FROM users WHERE id=?", (token))
     rows = cur.fetchall()
     if len(rows) == 0:
       print('get_self failed')

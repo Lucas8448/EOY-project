@@ -21,7 +21,11 @@ const store = createStore({
     }
   },
   actions: {},
-  getters: {},
+  getters: {
+    CurrentUser(state){
+      return state.userData;
+    }
+  },
 });
 
 export default store;
