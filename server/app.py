@@ -70,8 +70,9 @@ def handle_login(data):
     cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
     rows = cur.fetchall()
     if len(rows) == 0:
+      # return error in login emit
       print('login failed')
-      emit('login_failed')
+      emit('login', {'error': 'Invalid username or password'})
     else:
       print('login success')
       user = rows[0]
@@ -94,7 +95,7 @@ def handle_login(data):
             "owner_id": server[2],
             "icon": server[3]
         })
-      emit('login_success', user_data, servers)
+      emit('login', user_data, servers)
 
 @socketio.on('register')
 def handle_register(data):
@@ -108,12 +109,12 @@ def handle_register(data):
     rows = cur.fetchall()
     if len(rows) > 0:
       print('register failed')
-      emit('register_failed')
+      emit('register', {'error': 'Username or email already in use'})
     else:
       cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
       con.commit()
       print('register success')
-      emit('register_success')
+      emit('register')
       
 @socketio.on('get_self')
 def handle_get_user(data):
@@ -381,3 +382,7 @@ def handle_logout(data):
     con.commit()
     print('logout success')
     emit('logout_success', room=user_id)
+
+#run app
+if __name__ == '__main__':
+    socketio.run(app, port=3001)
