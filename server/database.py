@@ -9,8 +9,7 @@ c.execute('''CREATE TABLE users (
                 email TEXT,
                 password TEXT,
                 avatar BLOB,
-                discriminator TEXT,
-                online INTEGER
+                discriminator TEXT
             )''')
 
 c.execute('''CREATE TABLE servers (

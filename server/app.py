@@ -8,16 +8,13 @@ app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-online_users = set()
-
 #c.execute('''CREATE TABLE users (
 #                id TEXT PRIMARY KEY,
 #                username TEXT UNIQUE,
 #                email TEXT,
 #                password TEXT,
 #                avatar BLOB,
-#                discriminator TEXT,
-#                online INTEGER
+#                discriminator TEXT
 #            )''')
 #
 #c.execute('''CREATE TABLE servers (
