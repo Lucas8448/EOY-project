@@ -70,8 +70,9 @@ def handle_login(data):
     cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
     rows = cur.fetchall()
     if len(rows) == 0:
+      # return error in login emit
       print('login failed')
-      emit('login_failed')
+      emit('login', {'error': 'Invalid username or password'})
     else:
       print('login success')
       user = rows[0]
@@ -82,25 +83,14 @@ def handle_login(data):
           "avatar": user[4],
           "discriminator": user[5]
       }
-      cur.execute("SELECT * FROM server_members WHERE user_id=?", (user[0],))
-      rows = cur.fetchall()
-      servers = []
-      for row in rows:
-        cur.execute("SELECT * FROM servers WHERE id=?", (row[1],))
-        server = cur.fetchall()[0]
-        servers.append({
-            "id": server[0],
-            "name": server[1],
-            "owner_id": server[2],
-            "icon": server[3]
-        })
-      emit('login_success', user_data, servers)
+      emit('login', {'success':True, 'user':user_data})
 
 @socketio.on('register')
 def handle_register(data):
   print('register')
   username = data['username']
   password = data['password']
+  print(password)
   email = data['email']
   with sql.connect("database.db") as con:
     cur = con.cursor()
@@ -108,21 +98,31 @@ def handle_register(data):
     rows = cur.fetchall()
     if len(rows) > 0:
       print('register failed')
-      emit('register_failed')
+      emit('register', {'error': 'Username or email already in use'})
     else:
       cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
       con.commit()
+      cur = con.cursor()
+      cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+      rows = cur.fetchall()
+      user = rows[0]
+      user_data = {
+          "id": user[0],
+          "username": user[1],
+          "email": user[2],
+          "avatar": user[4],
+          "discriminator": user[5]
+      }
       print('register success')
-      emit('register_success')
+      emit('register', {'success':True, "user":user_data})
       
 @socketio.on('get_self')
 def handle_get_user(data):
   print('get_self')
-  username = data['username']
-  password = data['password']
+  token = data['token']
   with sql.connect("database.db") as con:
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+    cur.execute("SELECT * FROM users WHERE id=?", (token))
     rows = cur.fetchall()
     if len(rows) == 0:
       print('get_self failed')
@@ -381,3 +381,7 @@ def handle_logout(data):
     con.commit()
     print('logout success')
     emit('logout_success', room=user_id)
+
+#run app
+if __name__ == '__main__':
+    socketio.run(app, port=3001)

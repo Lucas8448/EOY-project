@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "chat",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -8,8 +8,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "socket.io-client": "^4.6.1",
     "vue": "^3.2.47",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "vuex": "^4.0.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.0.0",
