@@ -78,6 +78,7 @@ export default {
     return {
       username: "",
       password: "",
+      email: ""
     };
   },
   methods: {
@@ -89,9 +90,8 @@ export default {
           this.$store.commit("setUserData", data.user);
           this.$store.commit("LogIn", true);
           this.$router.push("/main");
-        } else {
-          console.log(data)
-          alert("Error");
+        } else if (data.error) {
+          alert(data.error);
         }
       });
     },

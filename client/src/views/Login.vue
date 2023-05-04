@@ -84,12 +84,12 @@ export default {
     login() {
       socket.emit("login", { username: this.username, password: this.password });
       socket.on("login", (data) => {
-        if (data.error) {
+        if (data.success) {
           this.$store.commit("setUserData", data.user);
           this.$store.commit("LogIn", true);
           this.$router.push("/main");
-        } else {
-          alert("Error, Check console")
+        } else if (data.error){
+          alert(data.error)
         }
       });
     },

@@ -67,15 +67,22 @@ def handle_login(data):
   password = data['password']
   with sql.connect("database.db") as con:
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-    rows = cur.fetchall()
-    if len(rows) == 0:
+    cur.execute("SELECT * FROM users WHERE username=?", (username, ))
+    user_rows = cur.fetchall()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE password=?", (password, ))
+    pass_rows = cur.fetchall()
+    if len(user_rows) == 0:
       # return error in login emit
       print('login failed')
-      emit('login', {'error': 'Invalid username or password'})
+      emit('login', {'error': 'Invalid username'})
+    if len(pass_rows) == 0:
+      # return error in login emit
+      print('login failed')
+      emit('login', {'error': 'Invalid password'})
     else:
       print('login success')
-      user = rows[0]
+      user = pass_rows[0]
       user_data = {
           "id": user[0],
           "username": user[1],
@@ -90,15 +97,20 @@ def handle_register(data):
   print('register')
   username = data['username']
   password = data['password']
-  print(password)
   email = data['email']
   with sql.connect("database.db") as con:
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE username=? OR email=?", (username, email))
-    rows = cur.fetchall()
-    if len(rows) > 0:
+    cur.execute("SELECT * FROM users WHERE username=?", (username, ))
+    user_rows = cur.fetchall()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE email=?", (email, ))
+    email_rows = cur.fetchall()
+    if len(email_rows) > 0:
       print('register failed')
-      emit('register', {'error': 'Username or email already in use'})
+      emit('register', {'error': 'Email already in use'})
+    if len(user_rows) > 0:
+      print('register failed')
+      emit('register', {'error': 'Username already in use'})
     else:
       cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
       con.commit()
