@@ -85,11 +85,13 @@ export default {
       socket.emit("register", { username: this.username, password: this.password, email: this.email });
       socket.on("register", (data) => {
         if (data.success) {
+          console.log(data.success);
           this.$store.commit("setUserData", data.user);
           this.$store.commit("LogIn", true);
           this.$router.push("/main");
-        } else if (data.error){
-          alert(data.error);
+        } else {
+          console.log(data)
+          alert("Error");
         }
       });
     },

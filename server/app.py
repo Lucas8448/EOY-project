@@ -83,7 +83,7 @@ def handle_login(data):
           "avatar": user[4],
           "discriminator": user[5]
       }
-      emit('login', {'data':user_data})
+      emit('login', {'success':True, 'user':user_data})
 
 @socketio.on('register')
 def handle_register(data):
@@ -102,8 +102,19 @@ def handle_register(data):
     else:
       cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
       con.commit()
+      cur = con.cursor()
+      cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+      rows = cur.fetchall()
+      user = rows[0]
+      user_data = {
+          "id": user[0],
+          "username": user[1],
+          "email": user[2],
+          "avatar": user[4],
+          "discriminator": user[5]
+      }
       print('register success')
-      emit('register')
+      emit('register', {'success':True, "user":user_data})
       
 @socketio.on('get_self')
 def handle_get_user(data):
