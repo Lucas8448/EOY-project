@@ -1,54 +1,28 @@
-from flask import Flask
+import os
+from flask import *
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import sqlite3 as sql
 from uuid7 import generate_uuid
 
+
 app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-#c.execute('''CREATE TABLE users (
-#                id TEXT PRIMARY KEY,
-#                username TEXT UNIQUE,
-#                email TEXT,
-#                password TEXT,
-#                avatar BLOB,
-#                discriminator TEXT
-#            )''')
-#
-#c.execute('''CREATE TABLE servers (
-#                id TEXT PRIMARY KEY,
-#                name TEXT,
-#                owner_id TEXT,
-#                icon BLOB,
-#                FOREIGN KEY(owner_id) REFERENCES users(id)
-#            )''')
-#
-#c.execute('''CREATE TABLE channels (
-#                id TEXT PRIMARY KEY,
-#                name TEXT,
-#                server_id TEXT,
-#                FOREIGN KEY(server_id) REFERENCES servers(id)
-#            )''')
-#
-#c.execute('''CREATE TABLE server_members (
-#                id TEXT PRIMARY KEY,
-#                server_id TEXT,
-#                user_id TEXT,
-#                FOREIGN KEY(server_id) REFERENCES servers(id),
-#                FOREIGN KEY(user_id) REFERENCES users(id)
-#            )''')
-#
-#c.execute('''CREATE TABLE messages (
-#                id TEXT PRIMARY KEY,
-#                content TEXT,
-#                author_id TEXT,
-#                channel_id TEXT,
-#                timestamp TEXT,
-#                FOREIGN KEY(author_id) REFERENCES users(id),
-#                FOREIGN KEY(channel_id) REFERENCES channels(id)
-#            )''')
+@app.route('/image/<name>')
+def get_image(name):
+  if os.path.isfile(f'assets/images/{name}'):
+    return send_file(f'assets/images/{name}', mimetype='image/png')
+  else:
+    return send_file(f'assets/images/default_user.png', mimetype='image/png')
+
+@app.route('/icon/<name>')
+def get_icon(name):
+  if os.path.isfile(f'assets/icon/{name}'):
+    return send_file(f'assets/icon/{name}', mimetype='image/png')
+  else:
+    return 404
 
 @socketio.on('connect')
 def handle_connect():
@@ -112,7 +86,7 @@ def handle_register(data):
       print('register failed')
       emit('register', {'error': 'Username already in use'})
     else:
-      cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
+      cur.execute("INSERT INTO users (id, username, password, email, avatar) VALUES (?, ?, ?, ?, ?)",(generate_uuid(), username, password, email, 'default_user.png'))
       con.commit()
       cur = con.cursor()
       cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
@@ -396,4 +370,4 @@ def handle_logout(data):
 
 #run app
 if __name__ == '__main__':
-    socketio.run(app, port=3001)
+    socketio.run(app, port=3055)

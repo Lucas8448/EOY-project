@@ -8,7 +8,7 @@ c.execute('''CREATE TABLE users (
                 username TEXT UNIQUE,
                 email TEXT,
                 password TEXT,
-                avatar BLOB,
+                avatar TEXT,
                 discriminator TEXT
             )''')
 
@@ -16,7 +16,7 @@ c.execute('''CREATE TABLE servers (
                 id TEXT PRIMARY KEY,
                 name TEXT,
                 owner_id TEXT,
-                icon BLOB,
+                icon TEXT,
                 FOREIGN KEY(owner_id) REFERENCES users(id)
             )''')
 
