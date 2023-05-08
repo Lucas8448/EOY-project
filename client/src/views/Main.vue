@@ -2,14 +2,26 @@
   <div class="main">
     <div class="navbar">
       <div class="navbar-items">
-        <img class="avatar" v-if="avatar" :src="avatar" />
+        <img class="avatar" v-if="avatar" :src="imageSource + avatar" />
         <h1 v-if="userInfo">{{ userInfo.username }}</h1>
         <h1 v-else>Loading...</h1>
       </div>
     </div>
-    <div class="servers"></div>
-    <div class="channels"></div>
-    <div class="messages"></div>
+    <div class="servers">
+      <div v-for="server in servers" class="server-icon">
+        <img :src="imageSource + server.icon" class="server" alt="server">
+      </div>
+    </div>
+    <div class="channels">
+      <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel">
+        <h2>{{ channel.name }}</h2>
+      </div>
+    </div>
+    <div class="messages">
+      <div v-for="message in messages" class="message">
+        <p>{{ message.content }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -24,18 +36,55 @@ export default {
       userId: null,
       currentServer: null,
       currentChannel: null,
-      
+      channels: [],
+      messages: []
     };
   },
   mounted() {
     try {
       this.userInfo = this.$store.getters.CurrentUser;
-      this.avatar = "http://127.0.0.1:3055/image/" + this.userInfo.avatar;
+      this.imageSource = "http://127.0.0.1:3055/image/"
+      this.avatar = this.userInfo.avatar;
       this.userId = this.userInfo.userId
+      this.servers = this.fetchServers
     } catch (err) {
       this.$router.push("/");
     }
   },
+  methods: {
+    fetchServers() {
+      socket.emit("get_servers", { Id: this.userId });
+      socket.on("get_servers", (data) => {
+        if (data.success) {
+          console.log(data.success);
+          return data.servers
+        } else if (data.error) {
+          alert(data.error);
+          return data.error
+        }
+      });
+    },
+    fetchChannels(server_id) {
+      socket.emit("get_channels", { server_id });
+      socket.on("get_channels", (data) => {
+        if (data.success) {
+          this.channels = data.channels;
+        } else {
+          alert("Failed to fetch channels");
+        }
+      });
+    },
+    fetchMessages(channel_id) {
+      socket.emit("get_messages", { channel_id });
+      socket.on("get_messages", (data) => {
+        if (data.success) {
+          this.messages = data.messages;
+        } else {
+          alert("Failed to fetch messages");
+        }
+      });
+    }
+  }
 };
 </script>
 
