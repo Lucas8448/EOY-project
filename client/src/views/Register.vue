@@ -72,7 +72,7 @@ h2 {
 </style>
 
 <script>
-import socket from "../socket";
+import { socket } from "../socket";
 export default {
   data() {
     return {
@@ -82,7 +82,17 @@ export default {
     };
   },
   methods: {
-    register() {
+    async sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    },
+    async register() {
+      console.log("Register")
+      const hashedPassword = await this.sha256(this.password);
+      this.password = hashedPassword;
       socket.emit("register", { username: this.username, password: this.password, email: this.email });
       socket.on("register", (data) => {
         if (data.success) {

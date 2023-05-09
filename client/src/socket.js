@@ -1,18 +1,18 @@
-import io from 'socket.io-client'
+import { io } from 'socket.io-client';
 
 const socket = io("http://127.0.0.1:3055/", {
-      transportOptions: {
-        polling: {
-          extraHeaders: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
-            "Access-Control-Allow-Headers":
-            "Content-Type, Authorization, Content-Length, X-Requested-With",
-          },
-        },
+  transportOptions: {
+    polling: {
+      extraHeaders: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, Content-Length, X-Requested-With",
       },
-    });
-    
+    },
+  },
+});
+
 function emitAsync(event, ...args) {
   return new Promise((resolve, reject) => {
     socket.emit(event, ...args, (response) => {
@@ -25,4 +25,4 @@ function emitAsync(event, ...args) {
   });
 }
 
-export default socket
+export { socket, emitAsync };
