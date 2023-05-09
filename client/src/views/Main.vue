@@ -52,7 +52,7 @@ export default {
     }
   },
   methods: {
-    fetchServers() {
+    async fetchServers() {
       socket.emit("get_servers", { Id: this.userId });
       socket.on("get_servers", (data) => {
         if (data.success) {
@@ -64,7 +64,7 @@ export default {
         }
       });
     },
-    fetchChannels(server_id) {
+    async fetchChannels(server_id) {
       socket.emit("get_channels", { server_id });
       socket.on("get_channels", (data) => {
         if (data.success) {
@@ -74,7 +74,7 @@ export default {
         }
       });
     },
-    fetchMessages(channel_id) {
+    async fetchMessages(channel_id) {
       socket.emit("get_messages", { channel_id });
       socket.on("get_messages", (data) => {
         if (data.success) {
@@ -83,7 +83,37 @@ export default {
           alert("Failed to fetch messages");
         }
       });
-    }
+    },
+    async sendMessage() {
+      socket.emit("send_message", { content: this.message });
+      socket.on("send_message", (data) => {
+        if (data.success) {
+          this.messages.push(data.message);
+        } else {
+          alert("Failed to send message");
+        }
+      });
+    },
+    async addChannel() {
+      socket.emit("add_channel", { name: this.channelName });
+      socket.on("add_channel", (data) => {
+        if (data.success) {
+          this.channels.push(data.channel);
+        } else {
+          alert("Failed to add channel");
+        }
+      });
+    },
+    async addServer() {
+      socket.emit("add_server", { name: this.serverName });
+      socket.on("add_server", (data) => {
+        if (data.success) {
+          this.servers.push(data.server);
+        } else {
+          alert("Failed to add server");
+        }
+      });
+    },
   }
 };
 </script>
