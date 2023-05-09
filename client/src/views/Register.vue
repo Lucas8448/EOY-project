@@ -82,7 +82,7 @@ export default {
     };
   },
   methods: {
-    getServers() {
+    register() {
       socket.emit("register", { username: this.username, password: this.password, email: this.email });
       socket.on("register", (data) => {
         if (data.success) {
