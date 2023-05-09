@@ -2,7 +2,6 @@
   <div class="main">
     <div class="navbar">
       <div class="navbar-items">
-        <img class="avatar" v-if="avatar" :src="imageSource + avatar" />
         <h1 v-if="userInfo">{{ userInfo.username }}</h1>
         <h1 v-else>Loading...</h1>
       </div>
@@ -32,7 +31,6 @@ export default {
   data() {
     return {
       userInfo: null,
-      avatar: null,
       userId: null,
       currentServer: null,
       currentChannel: null,
@@ -43,10 +41,8 @@ export default {
   mounted() {
     try {
       this.userInfo = this.$store.getters.CurrentUser;
-      this.imageSource = "http://127.0.0.1:3055/image/"
-      this.avatar = this.userInfo.avatar;
       this.userId = this.userInfo.userId
-      this.servers = this.fetchServers
+      this.servers = this.fetchServers()
     } catch (err) {
       this.$router.push("/");
     }

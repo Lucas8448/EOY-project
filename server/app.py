@@ -10,20 +10,6 @@ app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-@app.route('/image/<name>')
-def get_image(name):
-  if os.path.isfile(f'assets/images/{name}'):
-    return send_file(f'assets/images/{name}', mimetype='image/png')
-  else:
-    return send_file(f'assets/images/default_user.png', mimetype='image/png')
-
-@app.route('/icon/<name>')
-def get_icon(name):
-  if os.path.isfile(f'assets/icon/{name}'):
-    return send_file(f'assets/icon/{name}', mimetype='image/png')
-  else:
-    return 404
-
 @socketio.on('connect')
 def handle_connect():
   print('connected')
@@ -61,8 +47,7 @@ def handle_login(data):
           "id": user[0],
           "username": user[1],
           "email": user[2],
-          "avatar": user[4],
-          "discriminator": user[5]
+          "discriminator": user[4]
       }
       emit('login', {'success':True, 'user':user_data})
 
@@ -86,7 +71,7 @@ def handle_register(data):
       print('register failed')
       emit('register', {'error': 'Username already in use'})
     else:
-      cur.execute("INSERT INTO users (id, username, password, email, avatar) VALUES (?, ?, ?, ?, ?)",(generate_uuid(), username, password, email, 'default_user.png'))
+      cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
       con.commit()
       cur = con.cursor()
       cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
@@ -96,47 +81,10 @@ def handle_register(data):
           "id": user[0],
           "username": user[1],
           "email": user[2],
-          "avatar": user[4],
-          "discriminator": user[5]
+          "discriminator": user[4]
       }
       print('register success')
       emit('register', {'success':True, "user":user_data})
-      
-@socketio.on('get_self')
-def handle_get_user(data):
-  print('get_self')
-  token = data['token']
-  with sql.connect("database.db") as con:
-    cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE id=?", (token))
-    rows = cur.fetchall()
-    if len(rows) == 0:
-      print('get_self failed')
-      emit('get_self_failed')
-    else:
-      print('get_self success')
-      user = rows[0]
-      user_data = {
-          "id": user[0],
-          "username": user[1],
-          "email": user[2],
-          "avatar": user[4],
-          "discriminator": user[5]
-      }
-      cur.execute("SELECT * FROM server_members WHERE user_id=?", (user[0],))
-      rows = cur.fetchall()
-      servers = []
-      for row in rows:
-        cur.execute("SELECT * FROM servers WHERE id=?", (row[1],))
-        server = cur.fetchall()[0]
-        servers.append({
-            "id": server[0],
-            "name": server[1],
-            "owner_id": server[2],
-            "icon": server[3]
-        })
-      emit('get_self_success', user_data, servers)
-      
 
 @socketio.on('get_servers')
 def handle_get_servers(data):
@@ -161,8 +109,7 @@ def handle_get_servers(data):
         servers.append({
             "id": server[0],
             "name": server[1],
-            "owner_id": server[2],
-            "icon": server[3]
+            "owner_id": server[2]
         })
       emit('get_servers', {'success': True, "servers": servers})
 
@@ -176,7 +123,6 @@ def handle_get_channels(data):
         rows = cur.fetchall()
         channels = [{"id": row[0], "name": row[1]} for row in rows]
         emit('get_channels', {"success": True, "channels": channels})
-
 
 @socketio.on('get_messages')
 def handle_get_messages(data):
