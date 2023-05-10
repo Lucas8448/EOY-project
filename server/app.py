@@ -5,6 +5,7 @@ from flask_cors import CORS
 import sqlite3 as sql
 from uuid7 import generate_uuid
 
+sessions = {}
 
 app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
@@ -13,11 +14,14 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 @socketio.on('connect')
 def handle_connect():
   print('connected')
+  sessions[request.sid] = None
   emit('connected')
 
 @socketio.on('disconnect')
 def handle_disconnect():
   print('disconnected')
+  # delete session
+  del sessions[request.sid]
   emit('disconnected')
   
 @socketio.on('login')
@@ -49,6 +53,7 @@ def handle_login(data):
           "email": user[2],
           "discriminator": user[4]
       }
+      sessions[request.sid] = user[0]
       emit('login', {'success':True, 'user':user_data})
 
 @socketio.on('register')
@@ -84,35 +89,63 @@ def handle_register(data):
           "discriminator": user[4]
       }
       print('register success')
+      sessions[request.sid] = user[0]
       emit('register', {'success':True, "user":user_data})
 
-@socketio.on('get_servers')
-def handle_get_servers(data):
-  print('get_servers')
-  token = data['Id']
-  with sql.connect("database.db") as con:
-    cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE id=?", (token))
-    rows = cur.fetchall()
-    if len(rows) == 0:
-      print('get_servers failed')
-      emit('get_servers', {'error': 'Username already in use'})
-    else:
-      print('get_servers success')
-      user = rows[0]
-      cur.execute("SELECT * FROM server_members WHERE user_id=?", (user[0],))
-      rows = cur.fetchall()
-      servers = []
-      for row in rows:
-        cur.execute("SELECT * FROM servers WHERE id=?", (row[1],))
-        server = cur.fetchall()[0]
-        servers.append({
-            "id": server[0],
-            "name": server[1],
-            "owner_id": server[2]
-        })
-      emit('get_servers', {'success': True, "servers": servers})
 
+@socketio.on('add_server')
+def handle_addServer(data):
+    print('add_server')
+    name = data['name']
+    user_id = sessions[request.sid]
+    print(name, user_id)
+    try:
+        with sql.connect("database.db") as con:
+            cur = con.cursor()
+            cur.execute("INSERT INTO servers (id, name, owner_id) VALUES (?, ?, ?)",
+                        (generate_uuid(), name, user_id))
+            con.commit()
+            cur.execute(
+                "SELECT * FROM servers WHERE name=? AND owner_id=?", (name, user_id))
+            server = cur.fetchone()
+            if server is not None:
+                # add user as member of server
+                cur.execute("INSERT INTO server_members (server_id, user_id) VALUES (?, ?)",
+                            (server[0], user_id))
+                con.commit()
+                emit('addServer', {'success': True, 'server': {
+                    "id": server[0],
+                    "name": server[1],
+                    "owner_id": server[2]
+                }})
+            else:
+                print("Error: Server not found in the database")
+                emit('addServer', {'success': False})
+    except Exception as e:
+        print("Error creating server:", e)
+        emit('addServer', {'success': False})
+
+
+@socketio.on('get_servers')
+def handle_get_servers():
+    user_id = sessions[request.sid]
+    print(user_id)
+    try:
+        with sql.connect("database.db") as con:
+            cur = con.cursor()
+            cur.execute(
+                "SELECT server_id FROM server_members WHERE user_id=?", (user_id,))
+            server_ids = [row[0] for row in cur.fetchall()]
+            servers = []
+            for server_id in server_ids:
+                cur.execute("SELECT * FROM servers WHERE id=?", (server_id,))
+                server = cur.fetchone()
+                if server:
+                    servers.append(dict(server))
+            emit('get_servers', {"success": True, "servers": servers})
+    except Exception as e:
+        print("Error fetching servers:", e)
+        emit('get_servers', {"success": False})
 
 @socketio.on('get_channels')
 def handle_get_channels(data):
@@ -134,6 +167,7 @@ def handle_get_messages(data):
         messages = [{"id": row[0], "content": row[1], "author_id": row[2], "timestamp": row[4]} for row in rows]
         emit('get_messages', {"success": True, "messages": messages})
 
+
 @socketio.on('send_message')
 def handle_send_message(data):
     channel_id = data['channel_id']
@@ -141,9 +175,20 @@ def handle_send_message(data):
     content = data['content']
     with sql.connect("database.db") as con:
         cur = con.cursor()
-        cur.execute("INSERT INTO messages (id, content, author_id, channel_id) VALUES (?, ?, ?, ?)", (generate_uuid(), content, author_id, channel_id))
+        message_id = generate_uuid()
+        cur.execute("INSERT INTO messages (id, content, author_id, channel_id) VALUES (?, ?, ?, ?)",
+                    (message_id, content, author_id, channel_id))
         con.commit()
-        emit('send_message', {"success": True})
+        message = {
+            "id": message_id,
+            "content": content,
+            "author_id": author_id,
+            "timestamp": None  # You may want to add a timestamp field to your messages table
+        }
+        emit('send_message', {"success": True, "message": message})
+        # send to all users
+        emit('message', {"success": True, "message": message}, broadcast=True)
+
 
 #run app
 if __name__ == '__main__':

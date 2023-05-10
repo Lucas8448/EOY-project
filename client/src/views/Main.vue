@@ -65,10 +65,10 @@ export default {
   },
   methods: {
     async fetchServers() {
-      socket.emit("get_servers", { Id: this.userId });
+      socket.emit("get_servers");
       socket.on("get_servers", (data) => {
         if (data.success) {
-          console.log(data.success);
+          console.log(data);
           return data.servers
         } else if (data.error) {
           alert(data.error);
@@ -120,6 +120,7 @@ export default {
       socket.emit("add_server", { name: this.serverName });
       socket.on("add_server", (data) => {
         if (data.success) {
+          console.log("Added server", data);
           this.servers.push(data.server);
         } else {
           alert("Failed to add server");
