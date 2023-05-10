@@ -134,6 +134,16 @@ def handle_get_messages(data):
         messages = [{"id": row[0], "content": row[1], "author_id": row[2], "timestamp": row[4]} for row in rows]
         emit('get_messages', {"success": True, "messages": messages})
 
+@socketio.on('send_message')
+def handle_send_message(data):
+    channel_id = data['channel_id']
+    author_id = data['author_id']
+    content = data['content']
+    with sql.connect("database.db") as con:
+        cur = con.cursor()
+        cur.execute("INSERT INTO messages (id, content, author_id, channel_id) VALUES (?, ?, ?, ?)", (generate_uuid(), content, author_id, channel_id))
+        con.commit()
+        emit('send_message', {"success": True})
 
 #run app
 if __name__ == '__main__':

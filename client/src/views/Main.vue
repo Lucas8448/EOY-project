@@ -7,27 +7,41 @@
       </div>
     </div>
     <div class="servers">
-      <div v-for="server in servers" class="server-icon">
+      <div v-for="server in servers" @click="fetchChannels(server.id)" class="server-icon">
         <img :src="imageSource + server.icon" class="server" alt="server">
       </div>
+      <button @click="showAddServerModal = true">Add Server</button>
     </div>
     <div class="channels">
       <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel">
         <h2>{{ channel.name }}</h2>
       </div>
+      <button @click="showAddChannelModal = true">Add Channel</button>
     </div>
     <div class="messages">
       <div v-for="message in messages" class="message">
         <p>{{ message.content }}</p>
       </div>
+      <div class="message-input">
+        <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
+      </div>
     </div>
+    <add-server-modal v-if="showAddServerModal" @close="showAddServerModal = false" @add="addServer"></add-server-modal>
+    <add-channel-modal v-if="showAddChannelModal" @close="showAddChannelModal = false"
+      @add="addChannel"></add-channel-modal>
   </div>
 </template>
 
 <script>
 import { socket } from "../socket";
+import AddServerModal from "../components/AddServerModal.vue";
+import AddChannelModal from "../components/AddChannelModal.vue";
 
 export default {
+  components: {
+    AddServerModal,
+    AddChannelModal,
+  },
   data() {
     return {
       userInfo: null,
@@ -35,13 +49,15 @@ export default {
       currentServer: null,
       currentChannel: null,
       channels: [],
-      messages: []
+      messages: [],
+      showAddServerModal: false,
+      showAddChannelModal: false,
     };
   },
   mounted() {
     try {
       this.userInfo = this.$store.getters.CurrentUser;
-      this.userId = this.userInfo.userId
+      this.userId = this.userInfo.Id
       this.servers = this.fetchServers()
     } catch (err) {
       this.$router.push("/");
@@ -81,7 +97,7 @@ export default {
       });
     },
     async sendMessage() {
-      socket.emit("send_message", { content: this.message });
+      socket.emit("send_message", { content: this.message,  });
       socket.on("send_message", (data) => {
         if (data.success) {
           this.messages.push(data.message);
@@ -110,14 +126,36 @@ export default {
         }
       });
     },
-  }
+    async addServer(serverName) {
+      socket.emit("add_server", { name: serverName });
+      socket.on("add_server", (data) => {
+        if (data.success) {
+          this.servers.push(data.server);
+          this.showAddServerModal = false;
+        } else {
+          alert("Failed to add server");
+        }
+      });
+    },
+    async addChannel(channelName) {
+      socket.emit("add_channel", { name: channelName });
+      socket.on("add_channel", (data) => {
+        if (data.success) {
+          this.channels.push(data.channel);
+          this.showAddChannelModal = false;
+        } else {
+          alert("Failed to add channel");
+        }
+      });
+    },
+  },
 };
 </script>
 
 <style scoped>
 .main {
   display: grid;
-  grid-template-columns: 80px 240px 1fr;
+  grid-template-columns: 12rem 12rem 1fr;
   grid-template-rows: 60px 1fr;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
@@ -147,21 +185,68 @@ export default {
 
 .servers {
   grid-area: 2 / 1 / 3 / 2;
-  background-color: #e1e1e1;
+  background-color: #C4C4C4;
 }
 
 .channels {
   grid-area: 2 / 2 / 3 / 3;
-  background-color: #1d1d1d;
+  background-color: #4B4B4B;
 }
 
 .messages {
   grid-area: 2 / 3 / 3 / 4;
-  background-color: #400000;
+  background-color: #626262;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 10px;
+}
+
+.message-input {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.message-input input {
+  flex: 1;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 16px;
+  outline: none;
 }
 
 h1 {
   color: #fff;
   margin: 0;
+}
+
+button {
+  background-color: #6C8BA6;
+  border: none;
+  width: 90%;
+  margin: 5% 5%;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition-duration: 0.2s;
+}
+
+button:hover {
+  background-color: #5a7bb2;
+  color: white;
+}
+
+.channel {
+  color: #ffffff;
+  margin-bottom: 10px;
 }
 </style>

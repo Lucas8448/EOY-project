@@ -50,7 +50,7 @@ h2 {
   padding: 0.5rem;
   font-size: 1rem;
   color: #fff;
-  background-color: #007bff;
+  background-color: #6C8BA6;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -62,7 +62,7 @@ h2 {
 }
 
 .login-link {
-  color: #007bff;
+  color: #6C8BA6;
   text-decoration: none;
 }
 
