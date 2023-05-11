@@ -31,7 +31,7 @@ def handle_login(data):
   password = data['password']
   with sql.connect("database.db") as con:
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE email=? AND password=?", (email, password))
+    cur.execute("SELECT * FROM users WHERE email=? AND password=?", (email, password, ))
     rows = cur.fetchall()
     if len(rows) == 0:
       print('login failed')
@@ -44,8 +44,8 @@ def handle_login(data):
           "email": user[2],
           "discriminator": user[4]
       }
-      sessions[request.sid] = user_data
-      emit('login', user_data)
+      sessions[request.sid] = user[0]
+      emit('login', {'success':True, 'user':user_data})
 
 @socketio.on('register')
 def handle_register(data):
@@ -102,6 +102,7 @@ def handle_register(data):
       sessions[request.sid] = user[0]
       emit('register', {'success':True, "user":user_data})
 
+
 @socketio.on('add_server')
 def handle_addServer(data):
     print('add_server')
@@ -116,17 +117,25 @@ def handle_addServer(data):
             con.commit()
             cur.execute(
                 "SELECT * FROM servers WHERE name=? AND owner_id=?", (name, user_id))
+            columns = [column[0] for column in cur.description]
             server = cur.fetchone()
             if server is not None:
                 # add user as member of server
                 cur.execute("INSERT INTO server_members (server_id, user_id) VALUES (?, ?)",
                             (server[0], user_id))
                 con.commit()
-                emit('add_server', {'success': True, 'server': {
-                    "id": server[0],
-                    "name": server[1],
-                    "owner_id": server[2]
-                }})
+                # return all servers
+                cur.execute(
+                    "SELECT server_id FROM server_members WHERE user_id=?", (user_id,))
+                server_ids = [row[0] for row in cur.fetchall()]
+                servers = []
+                for server_id in server_ids:
+                    cur.execute(
+                        "SELECT * FROM servers WHERE id=?", (server_id,))
+                    server = cur.fetchone()
+                    if server:
+                        servers.append(dict(zip(columns, server)))
+                emit('add_server', {'success': True, 'servers': servers})
             else:
                 print("Error: Server not found in the database")
                 emit('add_server', {'success': False})
@@ -138,23 +147,30 @@ def handle_addServer(data):
 @socketio.on('get_servers')
 def handle_get_servers():
     user_id = sessions[request.sid]
-    print(user_id)
+    print("userId", user_id)
     try:
-        with sql.connect("database.db") as con:
-            cur = con.cursor()
-            cur.execute(
-                "SELECT server_id FROM server_members WHERE user_id=?", (user_id,))
-            server_ids = [row[0] for row in cur.fetchall()]
-            servers = []
-            for server_id in server_ids:
-                cur.execute("SELECT * FROM servers WHERE id=?", (server_id,))
-                server = cur.fetchone()
-                if server:
-                    servers.append(dict(server))
-            emit('get_servers', {"success": True, "servers": servers})
+      with sql.connect("database.db") as con:
+          cur = con.cursor()
+          cur.execute("SELECT server_id FROM server_members WHERE user_id=?", (user_id,))
+          member_server_ids = [id[0] for id in cur.fetchall()]
+          cur.execute("SELECT id FROM servers WHERE owner_id=?", (user_id,))
+          owner_server_ids = [id[0] for id in cur.fetchall()]
+          server_ids = list(set(member_server_ids + owner_server_ids))
+          cur.execute("SELECT * FROM servers LIMIT 0")
+          columns = [column[0] for column in cur.description]
+          servers = []
+          for server_id in server_ids:
+              cur.execute("SELECT * FROM servers WHERE id=?", (server_id,))
+              server = cur.fetchone()
+              if server:
+                  servers.append(dict(zip(columns, server)))
+          emit('get_servers', {"success": True, "servers": servers})
     except Exception as e:
-        print("Error fetching servers:", e)
-        emit('get_servers', {"success": False})
+      print("Error loading servers:", e)
+      emit('get_servers', {'success': False})
+
+
+
 
 @socketio.on('get_channels')
 def handle_get_channels(data):

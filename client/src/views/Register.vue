@@ -2,14 +2,13 @@
   <div class="register">
     <h2>Register</h2>
     <form @submit.prevent="register">
-      <input class="input-field" type="text" v-model="username" placeholder="Username" />
-      <input class="input-field" type="text" v-model="email" placeholder="Email" />
-      <input
-        class="input-field"
-        type="password"
-        v-model="password"
-        placeholder="Password"
-      />
+      <input class="input-field" type="email" v-model="email" placeholder="Email" />
+      <input class="input-field" type="password" v-model="password" placeholder="Password" />
+      <transition name="slide-fade">
+        <div v-if="email && password">
+          <input class="input-field" type="text" v-model="username" placeholder="Username" />
+        </div>
+      </transition>
       <button class="submit-button" type="submit">Register</button>
     </form>
     <p>
@@ -17,6 +16,7 @@
     </p>
   </div>
 </template>
+
 
 <style scoped>
 .register {
@@ -68,6 +68,20 @@ h2 {
 
 .login-link:hover {
   text-decoration: underline;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }
 </style>
 

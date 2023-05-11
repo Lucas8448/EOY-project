@@ -82,10 +82,7 @@ export default {
   },
   methods: {
     async sha256(message) {
-      const msgBuffer = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const hashHex = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message)))).map(b => b.toString(16).padStart(2, '0')).join('');
       return hashHex;
     },
     async login() {
@@ -93,6 +90,7 @@ export default {
       const hashedPassword = await this.sha256(this.password);
       socket.emit("login", { email: this.email, password: hashedPassword });
       socket.on("login", (data) => {
+        console.log("response")
         if (data.success) {
           this.$store.commit("setUserData", data.user);
           console.log("Redirecting")

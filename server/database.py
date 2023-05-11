@@ -8,7 +8,7 @@ c.execute('''CREATE TABLE users (
                 username TEXT,
                 email TEXT,
                 password TEXT,
-                discriminator INTEGER UNIQUE
+                discriminator INTEGER
             )''')
 
 c.execute('''CREATE TABLE servers (

@@ -7,16 +7,18 @@
       </div>
     </div>
     <div class="servers">
-      <div v-for="server in servers" @click="fetchChannels(server.id)" class="server-icon">
-        <h1>{{ server.name }}</h1>
+      <div v-for="server in servers" @click="changeServer(server.id)" class="server-icon">
+        <div class="server-item">
+          <h3>{{ server.name }}</h3>
+        </div>
       </div>
       <button @click="showAddServerModal = true">Add Server</button>
     </div>
     <div class="channels">
-      <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel">
+      <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
         <h2>{{ channel.name }}</h2>
       </div>
-      <button @click="showAddChannelModal = true">Add Channel</button>
+      <button @click="showAddChannelModal = true" v-show="currentServer">Add Channel</button>
     </div>
     <div class="messages">
       <div v-for="message in messages" class="message">
@@ -48,17 +50,30 @@ export default {
       userId: null,
       currentServer: null,
       currentChannel: null,
+      servers: [],
       channels: [],
       messages: [],
+      message: "",
       showAddServerModal: false,
       showAddChannelModal: false,
     };
   },
-  mounted() {
+  created() {
     try {
       this.userInfo = this.$store.getters.CurrentUser;
-      this.userId = this.userInfo.Id
-      this.servers = this.fetchServers()
+      this.userId = this.userInfo.Id;
+      socket.emit("get_servers");
+      socket.on("get_servers", (data) => {
+        if (data.success) {
+          console.log(data);
+          this.servers = data.servers
+        } else if (data.error) {
+          alert(data.error);
+          this.servers = null;
+        } else {
+          console.log(data)
+        }
+      });
     } catch (err) {
       this.$router.push("/");
     }
@@ -69,10 +84,9 @@ export default {
       socket.on("get_servers", (data) => {
         if (data.success) {
           console.log(data);
-          return data.servers
+          this.servers = data.servers
         } else if (data.error) {
           alert(data.error);
-          return data.error
         }
       });
     },
@@ -116,22 +130,11 @@ export default {
         }
       });
     },
-    async addServer() {
-      socket.emit("add_server", { name: this.serverName });
-      socket.on("add_server", (data) => {
-        if (data.success) {
-          console.log("Added server", data);
-          this.servers.push(data.server);
-        } else {
-          alert("Failed to add server");
-        }
-      });
-    },
     async addServer(serverName) {
       socket.emit("add_server", { name: serverName });
       socket.on("add_server", (data) => {
         if (data.success) {
-          this.servers.push(data.server);
+          this.servers = data.servers
           this.showAddServerModal = false;
         } else {
           alert("Failed to add server");
@@ -148,6 +151,11 @@ export default {
           alert("Failed to add channel");
         }
       });
+    },
+    async changeServer(serverId) {
+      this.currentServer = serverId;
+      console.log("changed server to:", this.currentServer)
+      this.fetchChannels(serverId);
     },
   },
 };
@@ -187,6 +195,16 @@ export default {
 .servers {
   grid-area: 2 / 1 / 3 / 2;
   background-color: #C4C4C4;
+}
+
+.server-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 10px;
+  margin: 10px 10px;
+  border-radius: 10px 0 10px 0;
+  cursor: pointer;
+  background-color: #626262;
 }
 
 .channels {
