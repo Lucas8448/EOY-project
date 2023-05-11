@@ -4,7 +4,7 @@ const socket = io("http://127.0.0.1:3055/", {
   transportOptions: {
     polling: {
       extraHeaders: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "127.0.0.1:3055",
         "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
         "Access-Control-Allow-Headers":
           "Content-Type, Authorization, Content-Length, X-Requested-With",
