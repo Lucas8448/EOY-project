@@ -205,6 +205,7 @@ export default {
   border-radius: 10px 0 10px 0;
   cursor: pointer;
   background-color: #626262;
+  color: #fff;
 }
 
 .channels {
@@ -239,7 +240,7 @@ export default {
 
 h1 {
   color: #fff;
-  margin: 0;
+  margin: 1%;
 }
 
 button {
