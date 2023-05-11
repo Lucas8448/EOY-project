@@ -169,9 +169,6 @@ def handle_get_servers():
       print("Error loading servers:", e)
       emit('get_servers', {'success': False})
 
-
-
-
 @socketio.on('get_channels')
 def handle_get_channels(data):
     server_id = data['server_id']
@@ -213,6 +210,30 @@ def handle_send_message(data):
         emit('send_message', {"success": True, "message": message})
         # send to all users
         emit('message', {"success": True, "message": message}, broadcast=True)
+
+
+@socketio.on('search_user')
+def handle_search_user(data):
+  searchText = data['searchText']
+  with sql.connect("database.db") as con:
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE username LIKE ?",
+                (f"%{searchText}%", ))
+    rows = cur.fetchall()
+    users = [{"id": row[0], "username": row[1], "discriminator": row[4]} for row in rows]
+    emit('search_user', {'success': True, 'users': users})
+
+
+@socketio.on('add_member')
+def handle_add_member(data):
+  server_id = data['serverId']
+  user_id = data['userId']
+  with sql.connect("database.db") as con:
+    cur = con.cursor()
+    cur.execute(
+        "INSERT INTO server_members (server_id, user_id) VALUES (?, ?)", (server_id, user_id))
+    con.commit()
+    emit('add_member', {'success': True})
 
 
 #run app

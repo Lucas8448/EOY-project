@@ -18,6 +18,7 @@
       <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
         <h2>{{ channel.name }}</h2>
       </div>
+      <button @click="showUserSearchModal = true" v-show="currentServer">Add user</button>
       <button @click="showAddChannelModal = true" v-show="currentServer">Add Channel</button>
     </div>
     <div class="messages">
@@ -31,6 +32,14 @@
     <add-server-modal v-if="showAddServerModal" @close="showAddServerModal = false" @add="addServer"></add-server-modal>
     <add-channel-modal v-if="showAddChannelModal" @close="showAddChannelModal = false"
       @add="addChannel"></add-channel-modal>
+    <user-search-modal
+      v-if="showUserSearchModal"
+      :userInfo="userInfo"
+      :searchedUsers="searchedUsers"
+      :showModal="showUserSearchModal"
+      @close-modal="showUserSearchModal = false"
+      @add-member="addMemberToServer"
+      @search-user="searchUser"></user-search-modal>
   </div>
 </template>
 
@@ -38,11 +47,13 @@
 import { socket } from "../socket";
 import AddServerModal from "../components/AddServerModal.vue";
 import AddChannelModal from "../components/AddChannelModal.vue";
+import UserSearchModal from "../components/UserSearchModal.vue";
 
 export default {
   components: {
     AddServerModal,
     AddChannelModal,
+    UserSearchModal,
   },
   data() {
     return {
@@ -53,9 +64,11 @@ export default {
       servers: [],
       channels: [],
       messages: [],
+      searchedUsers: [],
       message: "",
       showAddServerModal: false,
       showAddChannelModal: false,
+      showUserSearchModal: false,
     };
   },
   created() {
@@ -156,6 +169,26 @@ export default {
       this.currentServer = serverId;
       console.log("changed server to:", this.currentServer)
       this.fetchChannels(serverId);
+    },
+    searchUser(searchText) {
+      socket.emit("search_user", { searchText });
+      socket.on("search_user", (data) => {
+        if (data.success) {
+          this.searchedUsers = data.users;
+        } else {
+          alert("Failed to search user");
+        }
+      });
+    },
+    addMemberToServer(userId) {
+      socket.emit("add_member", { serverId: this.currentServer, userId });
+      socket.on("add_member", (data) => {
+        if (data.success) {
+          // handle successful addition of member
+        } else {
+          alert("Failed to add member");
+        }
+      });
     },
   },
 };
