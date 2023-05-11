@@ -27,34 +27,25 @@ def handle_disconnect():
 @socketio.on('login')
 def handle_login(data):
   print('login')
-  username = data['username']
+  email = data['email']
   password = data['password']
   with sql.connect("database.db") as con:
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE username=?", (username, ))
-    user_rows = cur.fetchall()
-    cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE password=?", (password, ))
-    pass_rows = cur.fetchall()
-    if len(user_rows) == 0:
-      # return error in login emit
+    cur.execute("SELECT * FROM users WHERE email=? AND password=?", (email, password))
+    rows = cur.fetchall()
+    if len(rows) == 0:
       print('login failed')
-      emit('login', {'error': 'Invalid username'})
-    if len(pass_rows) == 0:
-      # return error in login emit
-      print('login failed')
-      emit('login', {'error': 'Invalid password'})
+      emit('login', {'error': 'Invalid email or password'})
     else:
-      print('login success')
-      user = pass_rows[0]
+      user = rows[0]
       user_data = {
           "id": user[0],
           "username": user[1],
           "email": user[2],
           "discriminator": user[4]
       }
-      sessions[request.sid] = user[0]
-      emit('login', {'success':True, 'user':user_data})
+      sessions[request.sid] = user_data
+      emit('login', user_data)
 
 @socketio.on('register')
 def handle_register(data):
@@ -72,11 +63,13 @@ def handle_register(data):
     if len(email_rows) > 0:
       print('register failed')
       emit('register', {'error': 'Email already in use'})
-    if len(user_rows) > 0:
-      print('register failed')
-      emit('register', {'error': 'Username already in use'})
-    else:
-      cur.execute("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)",(generate_uuid(), username, password, email))
+    elif len(user_rows) > 0:
+      cur.execute("SELECT MAX(discriminator) FROM users WHERE username=?", (username, ))
+      max_discriminator = cur.fetchone()[0]
+      if max_discriminator is None:
+          max_discriminator = 999  # Set to 999 so that the first user gets 1000
+      discriminator = max_discriminator + 1
+      cur.execute("INSERT INTO users (id, username, password, email, discriminator) VALUES (?, ?, ?, ?, ?)",(generate_uuid(), username, password, email, discriminator))
       con.commit()
       cur = con.cursor()
       cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
@@ -91,7 +84,23 @@ def handle_register(data):
       print('register success')
       sessions[request.sid] = user[0]
       emit('register', {'success':True, "user":user_data})
-
+    else:
+      discriminator = 1000  # The first user with this username
+      cur.execute("INSERT INTO users (id, username, password, email, discriminator) VALUES (?, ?, ?, ?, ?)",(generate_uuid(), username, password, email, discriminator))
+      con.commit()
+      cur = con.cursor()
+      cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+      rows = cur.fetchall()
+      user = rows[0]
+      user_data = {
+          "id": user[0],
+          "username": user[1],
+          "email": user[2],
+          "discriminator": user[4]
+      }
+      print('register success')
+      sessions[request.sid] = user[0]
+      emit('register', {'success':True, "user":user_data})
 
 @socketio.on('add_server')
 def handle_addServer(data):
@@ -113,17 +122,17 @@ def handle_addServer(data):
                 cur.execute("INSERT INTO server_members (server_id, user_id) VALUES (?, ?)",
                             (server[0], user_id))
                 con.commit()
-                emit('addServer', {'success': True, 'server': {
+                emit('add_server', {'success': True, 'server': {
                     "id": server[0],
                     "name": server[1],
                     "owner_id": server[2]
                 }})
             else:
                 print("Error: Server not found in the database")
-                emit('addServer', {'success': False})
+                emit('add_server', {'success': False})
     except Exception as e:
         print("Error creating server:", e)
-        emit('addServer', {'success': False})
+        emit('add_server', {'success': False})
 
 
 @socketio.on('get_servers')

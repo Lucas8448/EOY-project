@@ -2,13 +2,13 @@
   <div class="main">
     <div class="navbar">
       <div class="navbar-items">
-        <h1 v-if="userInfo">{{ userInfo.username }}</h1>
+        <h1 v-if="userInfo">{{ userInfo.username }}:{{ userInfo.discriminator }}</h1>
         <h1 v-else>Loading...</h1>
       </div>
     </div>
     <div class="servers">
       <div v-for="server in servers" @click="fetchChannels(server.id)" class="server-icon">
-        <img :src="imageSource + server.icon" class="server" alt="server">
+        <h1>{{ server.name }}</h1>
       </div>
       <button @click="showAddServerModal = true">Add Server</button>
     </div>

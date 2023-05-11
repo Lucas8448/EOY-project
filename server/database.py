@@ -5,10 +5,10 @@ c = conn.cursor()
 
 c.execute('''CREATE TABLE users (
                 id TEXT PRIMARY KEY,
-                username TEXT UNIQUE,
+                username TEXT,
                 email TEXT,
                 password TEXT,
-                discriminator TEXT
+                discriminator INTEGER UNIQUE
             )''')
 
 c.execute('''CREATE TABLE servers (

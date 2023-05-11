@@ -2,7 +2,7 @@
   <div class="login">
     <h2>Login</h2>
     <form @submit.prevent="login">
-      <input class="input-field" type="text" v-model="username" placeholder="Username" />
+      <input class="input-field" type="text" v-model="email" placeholder="Email" />
       <input
         class="input-field"
         type="password"
@@ -76,7 +76,7 @@ import { socket } from "../socket";
 export default {
   data() {
     return {
-      username: "",
+      email: "",
       password: "",
     };
   },
@@ -91,7 +91,7 @@ export default {
     async login() {
       console.log("Login")
       const hashedPassword = await this.sha256(this.password);
-      socket.emit("login", { username: this.username, password: hashedPassword });
+      socket.emit("login", { email: this.email, password: hashedPassword });
       socket.on("login", (data) => {
         if (data.success) {
           this.$store.commit("setUserData", data.user);
