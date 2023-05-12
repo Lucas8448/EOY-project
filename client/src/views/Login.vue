@@ -2,7 +2,7 @@
   <div class="login">
     <h2>Login</h2>
     <form @submit.prevent="login">
-      <input class="input-field" type="text" v-model="username" placeholder="Username" />
+      <input class="input-field" type="text" v-model="email" placeholder="Email" />
       <input
         class="input-field"
         type="password"
@@ -50,7 +50,7 @@ h2 {
   padding: 0.5rem;
   font-size: 1rem;
   color: #fff;
-  background-color: #007bff;
+  background-color: #6C8BA6;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -62,7 +62,7 @@ h2 {
 }
 
 .register-link {
-  color: #007bff;
+  color: #6C8BA6;
   text-decoration: none;
 }
 
@@ -72,24 +72,31 @@ h2 {
 </style>
 
 <script>
-import socket from "../socket";
+import { socket } from "../socket";
 export default {
   data() {
     return {
-      username: "",
+      email: "",
       password: "",
     };
   },
   methods: {
-    login() {
-      socket.emit("login", { username: this.username, password: this.password });
+    async sha256(message) {
+      const hashHex = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message)))).map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    },
+    async login() {
+      console.log("Login")
+      const hashedPassword = await this.sha256(this.password);
+      socket.emit("login", { email: this.email, password: hashedPassword });
       socket.on("login", (data) => {
-        if (data.error) {
+        console.log("response")
+        if (data.success) {
           this.$store.commit("setUserData", data.user);
-          this.$store.commit("LogIn", true);
+          console.log("Redirecting")
           this.$router.push("/main");
-        } else {
-          alert("Error, Check console")
+        } else if (data.error) {
+          alert(data.error);
         }
       });
     },

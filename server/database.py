@@ -5,18 +5,16 @@ c = conn.cursor()
 
 c.execute('''CREATE TABLE users (
                 id TEXT PRIMARY KEY,
-                username TEXT UNIQUE,
+                username TEXT,
                 email TEXT,
                 password TEXT,
-                avatar BLOB,
-                discriminator TEXT
+                discriminator INTEGER
             )''')
 
 c.execute('''CREATE TABLE servers (
                 id TEXT PRIMARY KEY,
                 name TEXT,
                 owner_id TEXT,
-                icon BLOB,
                 FOREIGN KEY(owner_id) REFERENCES users(id)
             )''')
 

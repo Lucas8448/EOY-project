@@ -12,12 +12,6 @@ const store = createStore({
     },
     clearUserData(state) {
       state.userData = null;
-    },
-    logIn(state){
-      state.loggedIn = true;
-    },
-    logOut(state){
-      state.loggedIn = false;
     }
   },
   actions: {},
