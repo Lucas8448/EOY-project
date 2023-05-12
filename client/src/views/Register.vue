@@ -6,7 +6,7 @@
       <input class="input-field" type="password" v-model="password" placeholder="Password" />
       <transition name="slide-fade">
         <div v-if="email && password">
-          <input class="input-field" type="text" v-model="username" placeholder="Username" />
+          <input class="input-field" type="text" v-model="username" placeholder="Username" onkeypress="return event.charCode != 32"/>
         </div>
       </transition>
       <button class="submit-button" type="submit">Register</button>

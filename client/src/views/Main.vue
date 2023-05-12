@@ -2,7 +2,7 @@
   <div class="main">
     <div class="navbar">
       <div class="navbar-items">
-        <h1 v-if="userInfo">{{ userInfo.username }}:{{ userInfo.discriminator }}</h1>
+        <h1 v-if="userInfo" class="username">{{ userInfo.username }}#{{ userInfo.discriminator }}</h1>
         <h1 v-else>Loading...</h1>
       </div>
     </div>
@@ -274,6 +274,11 @@ export default {
 h1 {
   color: #fff;
   margin: 1%;
+}
+
+.username {
+  width: 70px;
+  white-space: nowrap;
 }
 
 button {
