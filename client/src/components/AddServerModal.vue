@@ -2,7 +2,7 @@
   <div class="modal">
     <div class="modal-content">
       <h2>Add Server</h2>
-            <input type="text" v-model="serverName" placeholder="Server name" />
+            <input type="text" v-model="serverName" placeholder="Server name" @keyup.enter="addServer"   />
         <div class="modal-actions">
           <button @click="addServer">Add</button>
           <button @click="$emit('close')">Cancel</button>

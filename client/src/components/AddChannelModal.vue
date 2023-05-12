@@ -2,7 +2,7 @@
   <div class="modal">
     <div class="modal-content">
       <h2>Add Channel</h2>
-      <input type="text" v-model="channelName" placeholder="Channel name" />
+      <input type="text" v-model="channelName" placeholder="Channel name" @keyup.enter="addChannel" />
       <div class="modal-actions">
         <button @click="addChannel">Add</button>
         <button @click="$emit('close')">Cancel</button>

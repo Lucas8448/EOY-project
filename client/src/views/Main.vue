@@ -16,7 +16,9 @@
     </div>
     <div class="channels">
       <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
-        <h2>{{ channel.name }}</h2>
+        <div class="channel-item">
+          <h3>{{ channel.name }}</h3>
+        </div>
       </div>
       <button @click="showUserSearchModal = true" v-show="currentServer">Add user</button>
       <button @click="showAddChannelModal = true" v-show="currentServer">Add Channel</button>
@@ -133,11 +135,13 @@ export default {
         }
       });
     },
-    async addChannel() {
-      socket.emit("add_channel", { name: this.channelName });
+    async addChannel(channelName) {
+      console.log("Adding channel", channelName, this.currentServer)
+      socket.emit("add_channel", { name: channelName, server_id:this.currentServer });
       socket.on("add_channel", (data) => {
         if (data.success) {
-          this.channels.push(data.channel);
+          this.channels = data.channels
+          this.showAddChannelModal = false;
         } else {
           alert("Failed to add channel");
         }
@@ -151,17 +155,6 @@ export default {
           this.showAddServerModal = false;
         } else {
           alert("Failed to add server");
-        }
-      });
-    },
-    async addChannel(channelName) {
-      socket.emit("add_channel", { name: channelName });
-      socket.on("add_channel", (data) => {
-        if (data.success) {
-          this.channels.push(data.channel);
-          this.showAddChannelModal = false;
-        } else {
-          alert("Failed to add channel");
         }
       });
     },
@@ -244,6 +237,17 @@ export default {
 .channels {
   grid-area: 2 / 2 / 3 / 3;
   background-color: #4B4B4B;
+}
+
+.channel-item {
+  color: #000000;
+  display: flex;
+  align-items: center;
+  padding: 10px 10px;
+  margin: 10px 10px;
+  border-radius: 10px 0 10px 0;
+  cursor: pointer;
+  background-color: #C4C4C4;
 }
 
 .messages {

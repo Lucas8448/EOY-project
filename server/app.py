@@ -169,15 +169,65 @@ def handle_get_servers():
       print("Error loading servers:", e)
       emit('get_servers', {'success': False})
 
+@socketio.on('add_channel')
+def handle_addChannel(data):
+    server_id = data['server_id']
+    name = data['name']
+    user_id = sessions[request.sid]
+    try:
+        with sql.connect("database.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT * FROM server_members WHERE server_id=? AND user_id=?", (server_id, user_id))
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                cur.execute("INSERT INTO channels (id, name, server_id) VALUES (?, ?, ?)",
+                            (generate_uuid(), name, server_id))
+                con.commit()
+                cur.execute(
+                    "SELECT * FROM channels WHERE name=? AND server_id=?", (name, server_id))
+                columns = [column[0] for column in cur.description]
+                channel = cur.fetchone()
+                if channel is not None:
+                    # return all channels
+                    cur.execute(
+                        "SELECT * FROM channels WHERE server_id=?", (server_id,))
+                    channels = []
+                    for channel in cur.fetchall():
+                        channels.append(dict(zip(columns, channel)))
+                    emit('add_channel', {'success': True, 'channels': channels})
+                else:
+                    print("Error: Channel not found in the database")
+                    emit('add_channel', {'success': False})
+            else:
+                print("Error: User is not a member of the server")
+                emit('add_channel', {'success': False})
+    except Exception as e:
+        print("Error creating channel:", e)
+        emit('add_channel', {'success': False})
+
 @socketio.on('get_channels')
 def handle_get_channels(data):
     server_id = data['server_id']
-    with sql.connect("database.db") as con:
-        cur = con.cursor()
-        cur.execute("SELECT * FROM channels WHERE server_id=?", (server_id,))
-        rows = cur.fetchall()
-        channels = [{"id": row[0], "name": row[1]} for row in rows]
-        emit('get_channels', {"success": True, "channels": channels})
+    user_id = sessions[request.sid]
+    try:
+        with sql.connect("database.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT * FROM server_members WHERE server_id=? AND user_id=?", (server_id, user_id))
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                cur.execute(
+                    "SELECT * FROM channels WHERE server_id=?", (server_id,))
+                columns = [column[0] for column in cur.description]
+                channels = []
+                for channel in cur.fetchall():
+                    channels.append(dict(zip(columns, channel)))
+                emit('get_channels', {'success': True, 'channels': channels})
+            else:
+                print("Error: User is not a member of the server")
+                emit('get_channels', {'success': False})
+    except Exception as e:
+        print("Error loading channels:", e)
+        emit('get_channels', {'success': False})
 
 @socketio.on('get_messages')
 def handle_get_messages(data):
