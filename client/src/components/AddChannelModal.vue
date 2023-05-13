@@ -4,8 +4,8 @@
       <h2>Add Channel</h2>
       <input type="text" v-model="channelName" placeholder="Channel name" @keyup.enter="addChannel" />
       <div class="modal-actions">
-        <button @click="addChannel">Add</button>
-        <button @click="$emit('close')">Cancel</button>
+        <button class="confirm" @click="addChannel">Add</button>
+        <button class="cancel" @click="$emit('close')">Cancel</button>
       </div>
     </div>
   </div>
@@ -70,6 +70,26 @@ input[type="text"]:focus {
 }
 
 button {
-  margin-left: 10px;
+  border: none;
+  width: 90%;
+  margin: 5% 5%;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition-duration: 0.2s;
+}
+
+.confirm {
+  background-color:#2E8B57;
+}
+
+.cancel {
+  background-color:#CD5C5C;
 }
 </style>
