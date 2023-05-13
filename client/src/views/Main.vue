@@ -7,7 +7,7 @@
       </div>
     </div>
     <div class="servers">
-      <div v-for="server in servers" @click="changeServer(server.id)" class="server-icon">
+      <div v-for="server in servers" :key="server.id" @click="changeServer(server.id)" class="server-icon">
         <div class="server-item">
           <h3>{{ server.name }}</h3>
         </div>
@@ -15,7 +15,7 @@
       <button @click="showAddServerModal = true">Add Server</button>
     </div>
     <div class="channels">
-      <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
+      <div v-for="channel in channels" :key="channel.id" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
         <div class="channel-item">
           <h3>{{ channel.name }}</h3>
         </div>
@@ -24,7 +24,7 @@
       <button @click="showAddChannelModal = true" v-show="currentServer">Add Channel</button>
     </div>
     <div class="messages">
-      <div v-for="message in messages" class="message">
+      <div v-for="message in messages" :key="message.id" class="message">
         <p>{{ message.content }}</p>
       </div>
       <div class="message-input">
