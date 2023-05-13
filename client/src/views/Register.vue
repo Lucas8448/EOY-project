@@ -2,11 +2,11 @@
   <div class="register">
     <h2>Register</h2>
     <form @submit.prevent="register">
-      <input class="input-field" type="email" v-model="email" placeholder="Email" />
-      <input class="input-field" type="password" v-model="password" placeholder="Password" />
+      <input class="input-field" type="email" required v-model="email" placeholder="Email" />
+      <input class="input-field" type="password" required v-model="password" placeholder="Password" />
       <transition name="slide-fade">
         <div v-if="email && password">
-          <input class="input-field" type="text" v-model="username" placeholder="Username" onkeypress="return event.charCode != 32"/>
+          <input class="input-field" type="text" required v-model="username" placeholder="Username" onkeypress="return event.charCode != 32"/>
         </div>
       </transition>
       <button class="submit-button" type="submit">Register</button>

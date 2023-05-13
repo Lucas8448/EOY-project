@@ -2,12 +2,13 @@
   <div class="login">
     <h2>Login</h2>
     <form @submit.prevent="login">
-      <input class="input-field" type="text" v-model="email" placeholder="Email" />
+      <input class="input-field" type="text" v-model="email" placeholder="Email" required />
       <input
         class="input-field"
         type="password"
         v-model="password"
         placeholder="Password"
+        required
       />
       <button class="submit-button" type="submit">Login</button>
     </form>
