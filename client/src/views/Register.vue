@@ -15,6 +15,7 @@
       Already have an account? <router-link class="login-link" to="/">Login</router-link>
     </p>
   </div>
+  <alert-modal ref="alertModal"></alert-modal>
 </template>
 
 
@@ -87,12 +88,18 @@ h2 {
 
 <script>
 import { socket } from "../socket";
+import AlertModal from "../components/AlertModal.vue";
+
 export default {
+  components: {
+    AlertModal,
+  },
   data() {
     return {
       username: "",
       password: "",
-      email: ""
+      email: "",
+      alertMessage: '',
     };
   },
   methods: {
@@ -113,7 +120,7 @@ export default {
           this.$store.commit("setUserData", data.user);
           this.$router.push("/main");
         } else if (data.error) {
-          alert(data.error);
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },

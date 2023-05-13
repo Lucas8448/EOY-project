@@ -42,6 +42,7 @@
       @close-modal="showUserSearchModal = false"
       @add-member="addMemberToServer"
       @search-user="searchUser"></user-search-modal>
+      <alert-modal ref="alertModal"></alert-modal>
   </div>
 </template>
 
@@ -50,12 +51,14 @@ import { socket } from "../socket";
 import AddServerModal from "../components/AddServerModal.vue";
 import AddChannelModal from "../components/AddChannelModal.vue";
 import UserSearchModal from "../components/UserSearchModal.vue";
+import AlertModal from "../components/AlertModal.vue";
 
 export default {
   components: {
     AddServerModal,
     AddChannelModal,
     UserSearchModal,
+    AlertModal,
   },
   data() {
     return {
@@ -71,6 +74,7 @@ export default {
       showAddServerModal: false,
       showAddChannelModal: false,
       showUserSearchModal: false,
+      alertMessage: '',
     };
   },
   created() {
@@ -101,7 +105,7 @@ export default {
           console.log(data);
           this.servers = data.servers
         } else if (data.error) {
-          alert(data.error);
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -110,8 +114,8 @@ export default {
       socket.on("get_channels", (data) => {
         if (data.success) {
           this.channels = data.channels;
-        } else {
-          alert("Failed to fetch channels");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -120,8 +124,8 @@ export default {
       socket.on("get_messages", (data) => {
         if (data.success) {
           this.messages = data.messages;
-        } else {
-          alert("Failed to fetch messages");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -130,8 +134,8 @@ export default {
       socket.on("send_message", (data) => {
         if (data.success) {
           this.messages.push(data.message);
-        } else {
-          alert("Failed to send message");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -142,8 +146,8 @@ export default {
         if (data.success) {
           this.channels = data.channels
           this.showAddChannelModal = false;
-        } else {
-          alert("Failed to add channel");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -153,8 +157,8 @@ export default {
         if (data.success) {
           this.servers = data.servers
           this.showAddServerModal = false;
-        } else {
-          alert("Failed to add server");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -168,8 +172,8 @@ export default {
       socket.on("search_user", (data) => {
         if (data.success) {
           this.searchedUsers = data.users;
-        } else {
-          alert("Failed to search user");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -178,8 +182,8 @@ export default {
       socket.on("add_member", (data) => {
         if (data.success) {
           // handle successful addition of member
-        } else {
-          alert("Failed to add member");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },

@@ -16,6 +16,7 @@
       <router-link class="register-link" to="/register">Register</router-link>
     </p>
   </div>
+  <alert-modal ref="alertModal"></alert-modal>
 </template>
 
 <style scoped>
@@ -73,11 +74,17 @@ h2 {
 
 <script>
 import { socket } from "../socket";
+import AlertModal from "../components/AlertModal.vue";
+
 export default {
+  components: {
+    AlertModal,
+  },
   data() {
     return {
       email: "",
       password: "",
+      alertMessage: '',
     };
   },
   methods: {
@@ -96,7 +103,7 @@ export default {
           console.log("Redirecting")
           this.$router.push("/main");
         } else if (data.error) {
-          alert(data.error);
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
