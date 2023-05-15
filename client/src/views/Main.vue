@@ -97,6 +97,15 @@ export default {
       this.$router.push("/");
     }
   },
+  mounted() {
+    socket.on('message', (data) => {
+      if (data.success) {
+        this.messages.push(data.message);
+      } else if (data.error) {
+        this.$refs.alertModal.showAlert(data.error);
+      }
+    });
+  },
   methods: {
     async fetchServers() {
       socket.emit("get_servers");
@@ -120,7 +129,8 @@ export default {
       });
     },
     async fetchMessages(channel_id) {
-      socket.emit("get_messages", { channel_id });
+      this.currentChannel = channel_id;
+      socket.emit("get_messages", { channel_id:channel_id });
       socket.on("get_messages", (data) => {
         if (data.success) {
           this.messages = data.messages;
@@ -130,7 +140,7 @@ export default {
       });
     },
     async sendMessage() {
-      socket.emit("send_message", { content: this.message,  });
+      socket.emit("send_message", { content: this.message, channel_id:this.currentChannel });
       socket.on("send_message", (data) => {
         if (data.success) {
           this.messages.push(data.message);
@@ -261,6 +271,7 @@ export default {
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 10px;
+  overflow: scroll;
 }
 
 .message-input {
@@ -277,6 +288,23 @@ export default {
   padding: 8px;
   font-size: 16px;
   outline: none;
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #838383;
+  color: #fff;
+}
+
+.message p {
+  margin: 0;
+  padding: 0;
+  word-wrap: break-word;
 }
 
 h1 {

@@ -6,6 +6,8 @@ import sqlite3 as sql
 from uuid7 import generate_uuid
 
 sessions = {}
+user_channels = {}
+user_servers = {}
 
 app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
@@ -180,8 +182,9 @@ def handle_addChannel(data):
             cur.execute("SELECT * FROM server_members WHERE server_id=? AND user_id=?", (server_id, user_id))
             rows = cur.fetchall()
             if len(rows) > 0:
+                channel_id = generate_uuid()
                 cur.execute("INSERT INTO channels (id, name, server_id) VALUES (?, ?, ?)",
-                            (generate_uuid(), name, server_id))
+                            (channel_id, name, server_id))
                 con.commit()
                 cur.execute(
                     "SELECT * FROM channels WHERE name=? AND server_id=?", (name, server_id))
@@ -194,6 +197,8 @@ def handle_addChannel(data):
                     channels = []
                     for channel in cur.fetchall():
                         channels.append(dict(zip(columns, channel)))
+                    user_servers[request.sid] = server_id
+                    user_channels[request.sid] = channel_id
                     emit('add_channel', {'success': True, 'channels': channels})
                 else:
                     print("Error: Channel not found in the database")
@@ -221,6 +226,7 @@ def handle_get_channels(data):
                 channels = []
                 for channel in cur.fetchall():
                     channels.append(dict(zip(columns, channel)))
+                user_servers[request.sid] = server_id
                 emit('get_channels', {'success': True, 'channels': channels})
             else:
                 print("Error: User is not a member of the server")
@@ -229,22 +235,26 @@ def handle_get_channels(data):
         print("Error loading channels:", e)
         emit('get_channels', {'success': False})
 
+
 @socketio.on('get_messages')
 def handle_get_messages(data):
     channel_id = data['channel_id']
+    user_channels[request.sid] = channel_id  # Update user's current channel
+    print("Getting messages for channel", channel_id)
     with sql.connect("database.db") as con:
         cur = con.cursor()
         cur.execute("SELECT * FROM messages WHERE channel_id=?", (channel_id,))
         rows = cur.fetchall()
-        messages = [{"id": row[0], "content": row[1], "author_id": row[2], "timestamp": row[4]} for row in rows]
+        messages = [{"id": row[0], "content": row[1],
+                     "author_id": row[2], "timestamp": row[4]} for row in rows]
         emit('get_messages', {"success": True, "messages": messages})
-
 
 @socketio.on('send_message')
 def handle_send_message(data):
     channel_id = data['channel_id']
-    author_id = data['author_id']
+    author_id = sessions[request.sid]
     content = data['content']
+    print("Sending message to channel", channel_id, "from user", author_id, ":", content)
     with sql.connect("database.db") as con:
         cur = con.cursor()
         message_id = generate_uuid()
@@ -258,8 +268,10 @@ def handle_send_message(data):
             "timestamp": None  # You may want to add a timestamp field to your messages table
         }
         emit('send_message', {"success": True, "message": message})
-        # send to all users
-        emit('message', {"success": True, "message": message}, broadcast=True)
+        # send to all users in list user_channels
+        for sid, channel in user_channels.items():
+            if channel == channel_id:
+                emit('message', {"success": True, "message": message}, room=sid)
 
 
 @socketio.on('search_user')
