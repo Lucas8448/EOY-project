@@ -108,6 +108,7 @@ export default {
     socket.on("send_message", (data) => {
       if (data.success) {
         console.log(data);
+        this.message = ""
         this.messages.push(data.message);
       } else if (data.error) {
         this.$refs.alertModal.showAlert(data.error);
