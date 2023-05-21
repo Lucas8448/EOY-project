@@ -7,7 +7,7 @@
       </div>
     </div>
     <div class="servers">
-      <div v-for="server in servers" @click="changeServer(server.id)" class="server-icon">
+      <div v-for="server in servers" :key="server.id" @click="changeServer(server.id)" class="server-icon">
         <div class="server-item">
           <h3>{{ server.name }}</h3>
         </div>
@@ -15,14 +15,16 @@
       <button @click="showAddServerModal = true">Add Server</button>
     </div>
     <div class="channels">
-      <div v-for="channel in channels" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
-        <h2>{{ channel.name }}</h2>
+      <div v-for="channel in channels" :key="channel.id" @click="fetchMessages(channel.id)" class="channel" v-show="currentServer">
+        <div class="channel-item">
+          <h3>{{ channel.name }}</h3>
+        </div>
       </div>
       <button @click="showUserSearchModal = true" v-show="currentServer">Add user</button>
       <button @click="showAddChannelModal = true" v-show="currentServer">Add Channel</button>
     </div>
     <div class="messages">
-      <div v-for="message in messages" class="message">
+      <div v-for="message in messages" :key="message.id" class="message">
         <p>{{ message.content }}</p>
       </div>
       <div class="message-input">
@@ -40,6 +42,7 @@
       @close-modal="showUserSearchModal = false"
       @add-member="addMemberToServer"
       @search-user="searchUser"></user-search-modal>
+      <alert-modal ref="alertModal"></alert-modal>
   </div>
 </template>
 
@@ -48,12 +51,14 @@ import { socket } from "../socket";
 import AddServerModal from "../components/AddServerModal.vue";
 import AddChannelModal from "../components/AddChannelModal.vue";
 import UserSearchModal from "../components/UserSearchModal.vue";
+import AlertModal from "../components/AlertModal.vue";
 
 export default {
   components: {
     AddServerModal,
     AddChannelModal,
     UserSearchModal,
+    AlertModal,
   },
   data() {
     return {
@@ -69,6 +74,7 @@ export default {
       showAddServerModal: false,
       showAddChannelModal: false,
       showUserSearchModal: false,
+      alertMessage: '',
     };
   },
   created() {
@@ -91,6 +97,23 @@ export default {
       this.$router.push("/");
     }
   },
+  mounted() {
+    socket.on('message', (data) => {
+      if (data.success) {
+        this.messages.push(data.message);
+      } else if (data.error) {
+        this.$refs.alertModal.showAlert(data.error);
+      }
+    });
+    socket.on("send_message", (data) => {
+      if (data.success) {
+        console.log(data);
+        this.messages.push(data.message);
+      } else if (data.error) {
+        this.$refs.alertModal.showAlert(data.error);
+      }
+    });
+  },
   methods: {
     async fetchServers() {
       socket.emit("get_servers");
@@ -99,7 +122,7 @@ export default {
           console.log(data);
           this.servers = data.servers
         } else if (data.error) {
-          alert(data.error);
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -108,38 +131,34 @@ export default {
       socket.on("get_channels", (data) => {
         if (data.success) {
           this.channels = data.channels;
-        } else {
-          alert("Failed to fetch channels");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
     async fetchMessages(channel_id) {
-      socket.emit("get_messages", { channel_id });
+      this.currentChannel = channel_id;
+      socket.emit("get_messages", { channel_id:channel_id });
       socket.on("get_messages", (data) => {
         if (data.success) {
           this.messages = data.messages;
-        } else {
-          alert("Failed to fetch messages");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
     async sendMessage() {
-      socket.emit("send_message", { content: this.message,  });
-      socket.on("send_message", (data) => {
-        if (data.success) {
-          this.messages.push(data.message);
-        } else {
-          alert("Failed to send message");
-        }
-      });
+      socket.emit("send_message", { content: this.message, channel_id:this.currentChannel });
     },
-    async addChannel() {
-      socket.emit("add_channel", { name: this.channelName });
+    async addChannel(channelName) {
+      console.log("Adding channel", channelName, this.currentServer)
+      socket.emit("add_channel", { name: channelName, server_id:this.currentServer });
       socket.on("add_channel", (data) => {
         if (data.success) {
-          this.channels.push(data.channel);
-        } else {
-          alert("Failed to add channel");
+          this.channels = data.channels
+          this.showAddChannelModal = false;
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -149,19 +168,8 @@ export default {
         if (data.success) {
           this.servers = data.servers
           this.showAddServerModal = false;
-        } else {
-          alert("Failed to add server");
-        }
-      });
-    },
-    async addChannel(channelName) {
-      socket.emit("add_channel", { name: channelName });
-      socket.on("add_channel", (data) => {
-        if (data.success) {
-          this.channels.push(data.channel);
-          this.showAddChannelModal = false;
-        } else {
-          alert("Failed to add channel");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -175,8 +183,8 @@ export default {
       socket.on("search_user", (data) => {
         if (data.success) {
           this.searchedUsers = data.users;
-        } else {
-          alert("Failed to search user");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -185,8 +193,8 @@ export default {
       socket.on("add_member", (data) => {
         if (data.success) {
           // handle successful addition of member
-        } else {
-          alert("Failed to add member");
+        } else if (data.error) {
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },
@@ -246,6 +254,17 @@ export default {
   background-color: #4B4B4B;
 }
 
+.channel-item {
+  color: #000000;
+  display: flex;
+  align-items: center;
+  padding: 10px 10px;
+  margin: 10px 10px;
+  border-radius: 10px 0 10px 0;
+  cursor: pointer;
+  background-color: #C4C4C4;
+}
+
 .messages {
   grid-area: 2 / 3 / 3 / 4;
   background-color: #626262;
@@ -253,6 +272,7 @@ export default {
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 10px;
+  overflow: scroll;
 }
 
 .message-input {
@@ -269,6 +289,23 @@ export default {
   padding: 8px;
   font-size: 16px;
   outline: none;
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #838383;
+  color: #fff;
+}
+
+.message p {
+  margin: 0;
+  padding: 0;
+  word-wrap: break-word;
 }
 
 h1 {

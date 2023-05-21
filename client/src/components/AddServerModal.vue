@@ -2,10 +2,10 @@
   <div class="modal">
     <div class="modal-content">
       <h2>Add Server</h2>
-            <input type="text" v-model="serverName" placeholder="Server name" />
+            <input type="text" v-model="serverName" placeholder="Server name" @keyup.enter="addServer"   />
         <div class="modal-actions">
-          <button @click="addServer">Add</button>
-          <button @click="$emit('close')">Cancel</button>
+          <button class="confirm" @click="addServer">Add</button>
+          <button class="cancel" @click="$emit('close')">Cancel</button>
         </div>
       </div>
     </div>
@@ -70,6 +70,26 @@ input[type="text"]:focus {
 }
 
 button {
-  margin-left: 10px;
+  border: none;
+  width: 90%;
+  margin: 5% 5%;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition-duration: 0.2s;
+}
+
+.confirm {
+  background-color:#2E8B57;
+}
+
+.cancel {
+  background-color:#CD5C5C;
 }
 </style>

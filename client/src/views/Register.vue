@@ -2,11 +2,11 @@
   <div class="register">
     <h2>Register</h2>
     <form @submit.prevent="register">
-      <input class="input-field" type="email" v-model="email" placeholder="Email" />
-      <input class="input-field" type="password" v-model="password" placeholder="Password" />
+      <input class="input-field" type="email" required v-model="email" placeholder="Email" />
+      <input class="input-field" type="password" required v-model="password" placeholder="Password" />
       <transition name="slide-fade">
         <div v-if="email && password">
-          <input class="input-field" type="text" v-model="username" placeholder="Username" onkeypress="return event.charCode != 32"/>
+          <input class="input-field" type="text" required v-model="username" placeholder="Username" onkeypress="return event.charCode != 32"/>
         </div>
       </transition>
       <button class="submit-button" type="submit">Register</button>
@@ -15,6 +15,7 @@
       Already have an account? <router-link class="login-link" to="/">Login</router-link>
     </p>
   </div>
+  <alert-modal ref="alertModal"></alert-modal>
 </template>
 
 
@@ -87,12 +88,18 @@ h2 {
 
 <script>
 import { socket } from "../socket";
+import AlertModal from "../components/AlertModal.vue";
+
 export default {
+  components: {
+    AlertModal,
+  },
   data() {
     return {
       username: "",
       password: "",
-      email: ""
+      email: "",
+      alertMessage: '',
     };
   },
   methods: {
@@ -113,7 +120,7 @@ export default {
           this.$store.commit("setUserData", data.user);
           this.$router.push("/main");
         } else if (data.error) {
-          alert(data.error);
+          this.$refs.alertModal.showAlert(data.error);
         }
       });
     },

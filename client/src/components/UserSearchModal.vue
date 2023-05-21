@@ -5,11 +5,13 @@
       <input type="text" v-model="searchText" @keyup="searchUser" placeholder="Search user...">
       <ul>
         <li v-for="user in searchedUsers" :key="user.id">
-          {{ user.username }}:{{ user.discriminator }}
-          <button @click="addMemberToServer(user.id)">Add</button>
+          <div class="user-container">
+            <span>{{ user.username }}:{{ user.discriminator }}</span>
+            <button class="add" @click="addMemberToServer(user.id)">Add</button>
+          </div>
         </li>
       </ul>
-      <button @click="$emit('close-modal')">Cancel</button>
+      <button class="cancel" @click="$emit('close-modal')">Cancel</button>
     </div>
   </div>
 </template>
@@ -68,20 +70,19 @@ export default {
   cursor: pointer;
 }
 
-.close:hover,
-.close:focus {
-  color: #000;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 ul {
   list-style-type: none;
   padding: 0;
+  max-height: 50vh;
+  overflow: scroll;
+  scroll-behavior: smooth;
 }
 
 li {
-  margin: 10px 0;
+  margin: 2.5% 2.5%;
+  padding: 2.5% 2.5%;
+  border: 2px darkgrey solid;
+  border-radius: 20px;
 }
 
 input[type="text"] {
@@ -91,5 +92,44 @@ input[type="text"] {
   box-sizing: border-box;
   border-radius: 4px;
   border: 2px solid #ccc;
+}
+
+.user-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add {
+  background-color:#2E8B57;
+  border: none;
+  width: 40%;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: 0.2s;
+  float: right;
+  vertical-align: middle;
+}
+
+.cancel {
+  background-color:#CD5C5C;
+  border: none;
+  width: 40%;
+  margin: 5% 0; 
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition-duration: 0.2s;
 }
 </style>
