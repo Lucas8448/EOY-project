@@ -105,6 +105,14 @@ export default {
         this.$refs.alertModal.showAlert(data.error);
       }
     });
+    socket.on("send_message", (data) => {
+      if (data.success) {
+        console.log(data);
+        this.messages.push(data.message);
+      } else if (data.error) {
+        this.$refs.alertModal.showAlert(data.error);
+      }
+    });
   },
   methods: {
     async fetchServers() {
@@ -141,13 +149,6 @@ export default {
     },
     async sendMessage() {
       socket.emit("send_message", { content: this.message, channel_id:this.currentChannel });
-      socket.on("send_message", (data) => {
-        if (data.success) {
-          this.messages.push(data.message);
-        } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
-        }
-      });
     },
     async addChannel(channelName) {
       console.log("Adding channel", channelName, this.currentServer)

@@ -249,12 +249,14 @@ def handle_get_messages(data):
                      "author_id": row[2], "timestamp": row[4]} for row in rows]
         emit('get_messages', {"success": True, "messages": messages})
 
+
 @socketio.on('send_message')
 def handle_send_message(data):
     channel_id = data['channel_id']
     author_id = sessions[request.sid]
     content = data['content']
-    print("Sending message to channel", channel_id, "from user", author_id, ":", content)
+    print("Sending message to channel", channel_id,
+          "from user", author_id, ":", content)
     with sql.connect("database.db") as con:
         cur = con.cursor()
         message_id = generate_uuid()
@@ -267,11 +269,14 @@ def handle_send_message(data):
             "author_id": author_id,
             "timestamp": None  # You may want to add a timestamp field to your messages table
         }
-        emit('send_message', {"success": True, "message": message})
-        # send to all users in list user_channels
+        # Emit only to the sender
+        emit('send_message', {"success": True,
+             "message": message}, room=request.sid)
+        # send to all users in list user_channels except the sender
         for sid, channel in user_channels.items():
-            if channel == channel_id:
-                emit('message', {"success": True, "message": message}, room=sid)
+            if channel == channel_id and sid != request.sid:
+                emit('message', {"success": True,
+                     "message": message}, room=sid)
 
 
 @socketio.on('search_user')
