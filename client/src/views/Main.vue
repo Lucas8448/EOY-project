@@ -25,7 +25,7 @@
     </div>
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message">
-        <p>{{ message.content }}</p>
+        <p><span class="username">{{ usernames[message.author_id] || 'Loading...' }}</span>{{ message.content }}</p>
       </div>
       <div class="message-input">
         <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
@@ -75,6 +75,7 @@ export default {
       showAddChannelModal: false,
       showUserSearchModal: false,
       alertMessage: '',
+      usernames: {},
     };
   },
   created() {
@@ -189,7 +190,7 @@ export default {
       });
     },
     addMemberToServer(userId) {
-      socket.emit("add_member", { serverId: this.currentServer, userId });
+      socket.emit("add_member", { serverId: this.currentServer, userId:userId });
       socket.on("add_member", (data) => {
         if (data.success) {
           // handle successful addition of member
@@ -198,6 +199,21 @@ export default {
         }
       });
     },
+    getUsername(userId) {
+      if (this.usernames[userId]) {
+        return this.usernames[userId];
+      } else {
+        socket.emit("get_username", { userId: userId });
+        socket.on("get_username", (data) => {
+          if (data.success) {
+            this.usernames[userId] = data.username;
+          } else if (data.error) {
+            this.usernames[userId] = "Unknown";
+          }
+        });
+        return "Loading...";
+      }
+    }
   },
 };
 </script>
@@ -303,10 +319,18 @@ export default {
 }
 
 .message p {
+  color: #000;
   margin: 0;
   padding: 0;
   word-wrap: break-word;
 }
+
+.message::before {
+  content: attr(data-username);
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
 
 h1 {
   color: #fff;

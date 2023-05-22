@@ -302,6 +302,18 @@ def handle_add_member(data):
     con.commit()
     emit('add_member', {'success': True})
 
+# get username
+@socketio.on('get_username')
+def handle_get_username(data):
+    user_id = data["userId"]
+    with sql.connect("database.db") as con:
+        cur = con.cursor()
+        cur.execute("SELECT * FROM users WHERE id=?", (user_id,))
+        rows = cur.fetchall()
+        if len(rows) > 0:
+            emit('get_username', {'success': True, 'username': rows[0][1]})
+        else:
+            emit('get_username', {'success': False})
 
 #run app
 if __name__ == '__main__':
