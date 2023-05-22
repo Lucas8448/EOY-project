@@ -108,6 +108,7 @@ export default {
     socket.on("send_message", (data) => {
       if (data.success) {
         console.log(data);
+        this.message = ""
         this.messages.push(data.message);
       } else if (data.error) {
         this.$refs.alertModal.showAlert(data.error);
@@ -291,15 +292,15 @@ export default {
   outline: none;
 }
 
-.message {
+.messages {
+  grid-area: 2 / 3 / 3 / 4;
+  background-color: #626262;
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  margin: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: #838383;
-  color: #fff;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 10px;
+  overflow-y: scroll;
+  position: relative;
 }
 
 .message p {
