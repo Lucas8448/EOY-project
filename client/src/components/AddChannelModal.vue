@@ -2,7 +2,7 @@
   <div class="modal">
     <div class="modal-content">
       <h2>Add Channel</h2>
-      <input type="text" v-model="channelName" placeholder="Channel name" @keyup.enter="addChannel" />
+      <input type="text" class="input" v-model="channelName" placeholder="Channel name" @keyup.enter="addChannel" />
       <div class="modal-actions">
         <button class="confirm">
           Add
@@ -47,18 +47,28 @@ export default {
   align-items: center;
 }
 
-input[type="text"] {
-  padding: 10px;
-  font-size: 16px;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
+.input {
   width: 100%;
+  height: 45px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid lightgrey;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 0px 0px 20px -18px;
 }
 
-input[type="text"]:focus {
-  border-color: #5c5cff;
-  outline: none;
+.input:hover {
+  border: 2px solid lightgrey;
+  box-shadow: 0px 0px 20px -17px;
+}
+
+.input:active {
+  transform: scale(0.95);
+}
+
+.input:focus {
+  border: 3px solid grey;
 }
 
 .modal-content {
