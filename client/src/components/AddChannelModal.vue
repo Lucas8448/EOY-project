@@ -4,29 +4,18 @@
       <h2>Add Channel</h2>
       <input type="text" v-model="channelName" placeholder="Channel name" @keyup.enter="addChannel" />
       <div class="modal-actions">
-        <button class="confirm" @click="addChannel">Add</button>
-        <button class="cancel" @click="$emit('close')">Cancel</button>
+        <button class="confirm">
+          Add
+          <span></span>
+        </button>
+        <button class="cancel" @click="$emit('close')">
+          Cancel
+          <span></span>
+        </button>
       </div>
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  data() {
-    return {
-      channelName: "",
-    };
-  },
-  methods: {
-    addChannel() {
-      this.$emit("add", this.channelName);
-      this.channelName = "";
-      this.$emit("close");
-    },
-  },
-};
-</script>
 
 <style scoped>
 .modal {
@@ -65,31 +54,128 @@ input[type="text"]:focus {
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: 10px;
 }
 
-button {
-  border: none;
-  width: 90%;
-  margin: 5% 5%;
-  border-radius: 4px;
-  color: #ffffff;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 10px;
-  padding: 8px 16px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  transition-duration: 0.2s;
+.modal-actions button {
+  flex: 1;
+  margin-right: 10px;
+  /* Add spacing between buttons */
+}
+
+.modal-actions button:last-child {
+  margin-right: 0;
+  /* Remove margin from last button */
 }
 
 .confirm {
-  background-color:#2E8B57;
+  border: none;
+  display: block;
+  position: relative;
+  padding: 0.7em 2em;
+  font-size: 18px;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  color: #2E8B57;
+  z-index: 1;
+  font-family: inherit;
+  font-weight: 500;
+  text-align: center;
+}
+
+.confirm span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: -1;
+  border: 4px solid #2E8B57;
+}
+
+.confirm span::before {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 8%;
+  height: 500%;
+  background: var(--lightgray);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-60deg);
+  transition: all 0.3s;
+}
+
+.confirm:hover span::before {
+  transform: translate(-50%, -50%) rotate(-90deg);
+  width: 100%;
+  background: #2E8B57;
+}
+
+.confirm:hover {
+  color: white;
+}
+
+.confirm:active span::before {
+  background: #2E8B57;
 }
 
 .cancel {
-  background-color:#CD5C5C;
+  border: none;
+  display: block;
+  position: relative;
+  padding: 0.7em 2em;
+  font-size: 18px;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  color: #CD5C5C;
+  z-index: 1;
+  font-family: inherit;
+  font-weight: 500;
+  text-align: center;
+}
+
+.cancel span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: -1;
+  border: 4px solid #CD5C5C;
+}
+
+.cancel span::before {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 8%;
+  height: 500%;
+  background: var(--lightgray);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-60deg);
+  transition: all 0.3s;
+}
+
+.cancel:hover span::before {
+  transform: translate(-50%, -50%) rotate(-90deg);
+  width: 100%;
+  background: #CD5C5C;
+}
+
+.cancel:hover {
+  color: white;
+}
+
+.cancel:active span::before {
+  background: #CD5C5C;
 }
 </style>
