@@ -13,6 +13,10 @@ app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+@app.route('/ping')
+def hello():
+    return 'Pong!!'
+
 @socketio.on('connect')
 def handle_connect():
   print('connected')
