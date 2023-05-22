@@ -76,9 +76,10 @@
 
 <style scoped>
 .container {
+  position: absolute;
+  top: calc(40vh);
   width: 100%;
   display: flex;
-  margin-top: 15vh;
   justify-content: center;
   align-items: center;
 }

@@ -17,6 +17,23 @@
   </div>
 </template>
 
+<script>
+export default {
+  data() {
+    return {
+      channelName: "",
+    };
+  },
+  methods: {
+    addChannel() {
+      this.$emit("add", this.channelName);
+      this.channelName = "";
+      this.$emit("close");
+    },
+  },
+};
+</script>
+
 <style scoped>
 .modal {
   position: fixed;
