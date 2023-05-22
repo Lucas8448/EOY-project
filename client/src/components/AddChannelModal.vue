@@ -4,7 +4,7 @@
       <h2>Add Channel</h2>
       <input type="text" class="input" v-model="channelName" placeholder="Channel name" @keyup.enter="addChannel" />
       <div class="modal-actions">
-        <button class="confirm">
+        <button class="confirm" @click="addChannel()">
           Add
           <span></span>
         </button>
