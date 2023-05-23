@@ -25,7 +25,7 @@
     </div>
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message">
-        <p class="message"><span class="username">{{ usernames[message.author_id] || 'Loading...' }}</span>{{ message.content }}</p>
+        <p class="message"><span class="username">{{ getUsername(message.author_id) }}</span> > {{ message.content }}</p>
       </div>
       <div class="message-input">
         <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
@@ -202,19 +202,19 @@ export default {
       });
     },
     getUsername(userId) {
-      if (this.usernames[userId]) {
-        return this.usernames[userId];
-      } else {
+      if (!this.usernames[userId]) {
         socket.emit("get_username", { userId: userId });
         socket.on("get_username", (data) => {
           if (data.success) {
             this.usernames[userId] = data.username;
+            console.log(this.username)
           } else if (data.error) {
             this.usernames[userId] = "Unknown";
           }
         });
         return "Loading...";
       }
+      return this.usernames[userId];
     }
   },
 };
