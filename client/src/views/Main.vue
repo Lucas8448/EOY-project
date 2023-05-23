@@ -25,7 +25,7 @@
     </div>
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message">
-        <p><span class="username">{{ usernames[message.author_id] || 'Loading...' }}</span>{{ message.content }}</p>
+        <p class="message"><span class="username">{{ getUsername(message.author_id) }}</span> : {{ message.content }}</p>
       </div>
       <div class="message-input">
         <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
@@ -112,6 +112,7 @@ export default {
         this.message = ""
         this.messages.push(data.message);
       } else if (data.error) {
+        this.message = ""
         this.$refs.alertModal.showAlert(data.error);
       }
     });
@@ -201,19 +202,19 @@ export default {
       });
     },
     getUsername(userId) {
-      if (this.usernames[userId]) {
-        return this.usernames[userId];
-      } else {
+      if (!this.usernames[userId]) {
         socket.emit("get_username", { userId: userId });
         socket.on("get_username", (data) => {
           if (data.success) {
             this.usernames[userId] = data.username;
+            console.log(this.username)
           } else if (data.error) {
             this.usernames[userId] = "Unknown";
           }
         });
         return "Loading...";
       }
+      return this.usernames[userId];
     }
   },
 };
@@ -324,6 +325,13 @@ export default {
   margin: 0;
   padding: 0;
   word-wrap: break-word;
+  /* style in white box with black text */
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px;
+  max-width: 60%;
+  position: relative;
 }
 
 .message::before {
@@ -341,6 +349,7 @@ h1 {
 .username {
   width: 70px;
   white-space: nowrap;
+  font-weight: bold;
 }
 
 button {
