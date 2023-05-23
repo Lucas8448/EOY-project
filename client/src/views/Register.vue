@@ -90,7 +90,7 @@
 <style scoped>
 .container {
   position: absolute;
-  top: calc(40vh);
+  top: 80vh;
   width: 100%;
   display: flex;
   justify-content: center;

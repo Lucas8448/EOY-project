@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import sqlite3 as sql
 from uuid7 import generate_uuid
+from moderator import moderate
 
 sessions = {}
 user_channels = {}
@@ -259,28 +260,32 @@ def handle_send_message(data):
     channel_id = data['channel_id']
     author_id = sessions[request.sid]
     content = data['content']
-    print("Sending message to channel", channel_id,
-          "from user", author_id, ":", content)
-    with sql.connect("database.db") as con:
-        cur = con.cursor()
-        message_id = generate_uuid()
-        cur.execute("INSERT INTO messages (id, content, author_id, channel_id) VALUES (?, ?, ?, ?)",
-                    (message_id, content, author_id, channel_id))
-        con.commit()
-        message = {
-            "id": message_id,
-            "content": content,
-            "author_id": author_id,
-            "timestamp": None  # You may want to add a timestamp field to your messages table
-        }
+
+    # Moderate the content
+    if moderate(content):
+        print("Message from user", author_id, "flagged by the moderation model.")
         # Emit only to the sender
-        emit('send_message', {"success": True,
-             "message": message}, room=request.sid)
-        # send to all users in list user_channels except the sender
-        for sid, channel in user_channels.items():
-            if channel == channel_id and sid != request.sid:
-                emit('message', {"success": True,
-                     "message": message}, room=sid)
+        emit('send_message', {"success": False, "error": "Content violates policies"}, room=request.sid)
+    else:
+        print("Sending message to channel", channel_id, "from user", author_id, ":", content)
+        with sql.connect("database.db") as con:
+            cur = con.cursor()
+            message_id = generate_uuid()
+            cur.execute("INSERT INTO messages (id, content, author_id, channel_id) VALUES (?, ?, ?, ?)",
+                        (message_id, content, author_id, channel_id))
+            con.commit()
+            message = {
+                "id": message_id,
+                "content": content,
+                "author_id": author_id,
+                "timestamp": None  # You may want to add a timestamp field to your messages table
+            }
+            # Emit only to the sender
+            emit('send_message', {"success": True, "message": message}, room=request.sid)
+            # send to all users in list user_channels except the sender
+            for sid, channel in user_channels.items():
+                if channel == channel_id and sid != request.sid:
+                    emit('message', {"success": True, "message": message}, room=sid)
 
 
 @socketio.on('search_user')
