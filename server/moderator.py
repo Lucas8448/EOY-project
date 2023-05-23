@@ -1,6 +1,6 @@
 import openai
 
-openai.api_key = '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'
+openai.api_key = 'api_key'
 
 def moderate(text):
     

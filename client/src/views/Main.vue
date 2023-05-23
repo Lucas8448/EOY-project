@@ -25,7 +25,7 @@
     </div>
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message">
-        <p class="message"><span class="username">{{ getUsername(message.author_id) }}</span> > {{ message.content }}</p>
+        <p class="message"><span class="username">{{ getUsername(message.author_id) }}</span> : {{ message.content }}</p>
       </div>
       <div class="message-input">
         <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
@@ -349,6 +349,7 @@ h1 {
 .username {
   width: 70px;
   white-space: nowrap;
+  font-weight: bold;
 }
 
 button {
