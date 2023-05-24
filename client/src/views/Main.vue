@@ -58,6 +58,7 @@
 </template>
 
 <script>
+import { onMounted, ref } from 'vue'
 import { socket } from "../socket";
 import AddServerModal from "../components/AddServerModal.vue";
 import AddChannelModal from "../components/AddChannelModal.vue";
@@ -114,7 +115,9 @@ export default {
       if (data.success) {
         this.messages.push(data.message);
       } else if (data.error) {
-        this.$refs.alertModal.showAlert(data.error);
+        this.$nextTick(() => {
+          this.$refs.alertModal.showAlert(data.error);
+        });
       }
     });
     socket.on("send_message", (data) => {
@@ -124,7 +127,9 @@ export default {
         this.messages.push(data.message);
       } else if (data.error) {
         this.message = ""
-        this.$refs.alertModal.showAlert(data.error);
+        this.$nextTick(() => {
+          this.$refs.alertModal.showAlert(data.error);
+        });
       }
     });
   },
@@ -136,7 +141,9 @@ export default {
           console.log(data);
           this.servers = data.servers
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -146,7 +153,9 @@ export default {
         if (data.success) {
           this.channels = data.channels;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -157,7 +166,9 @@ export default {
         if (data.success) {
           this.messages = data.messages;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -172,7 +183,9 @@ export default {
           this.channels = data.channels
           this.showAddChannelModal = false;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -183,13 +196,16 @@ export default {
           this.servers = data.servers
           this.showAddServerModal = false;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
     async changeServer(serverId) {
       this.currentServer = serverId;
       this.currentChannel = null;
+      this.messages = null
       console.log("changed server to:", this.currentServer)
       this.fetchChannels(serverId);
     },
@@ -199,7 +215,9 @@ export default {
         if (data.success) {
           this.searchedUsers = data.users;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -209,7 +227,9 @@ export default {
         if (data.success) {
           // handle successful addition of member
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -373,7 +393,7 @@ export default {
 }
 
 .nochannel {
-  top: 10vh;
+  top: 190%;
   right: 50%;
   text-align: center;
 }
