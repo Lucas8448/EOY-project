@@ -25,7 +25,7 @@
     </div>
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message">
-        <p class="message"><span class="username">{{ getUsername(message.author_id) }}</span> : {{ message.content }}</p>
+        <p class="message"><span class="username">{{ message.username }}</span> : {{ message.content }}</p>
       </div>
       <div class="message-input" v-if="currentChannel">
         <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
@@ -173,7 +173,13 @@ export default {
       });
     },
     async sendMessage() {
-      socket.emit("send_message", { content: this.message, channel_id:this.currentChannel });
+      if (this.message == ''){
+        this.$nextTick(() => {
+          this.$refs.alertModal.showAlert("No message content");
+        });
+      } else {
+        socket.emit("send_message", { content: this.message, channel_id: this.currentChannel });
+      }
     },
     async addChannel(channelName) {
       console.log("Adding channel", channelName, this.currentServer)
@@ -232,21 +238,6 @@ export default {
           });
         }
       });
-    },
-    getUsername(userId) {
-      if (!this.usernames[userId]) {
-        socket.emit("get_username", { userId: userId });
-        socket.on("get_username", (data) => {
-          if (data.success) {
-            this.usernames[userId] = data.username;
-            console.log(this.username)
-          } else if (data.error) {
-            this.usernames[userId] = "Unknown";
-          }
-        });
-        return "Loading...";
-      }
-      return this.usernames[userId];
     }
   },
 };
@@ -330,7 +321,9 @@ export default {
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 10px;
-  overflow: scroll;
+  overflow-y: auto;
+  position: relative;
+  height: calc(100vh - 60px);
 }
 
 .message-input {
@@ -341,23 +334,11 @@ export default {
 
 .message-input input {
   flex: 1;
-  margin-right: 10px;
   border: none;
   border-radius: 4px;
   padding: 8px;
   font-size: 16px;
   outline: none;
-}
-
-.messages {
-  grid-area: 2 / 3 / 3 / 4;
-  background-color: #626262;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding-bottom: 10px;
-  overflow-y: scroll;
-  position: relative;
 }
 
 .message p {
@@ -370,7 +351,7 @@ export default {
   padding: 10px;
   border-radius: 10px;
   margin: 10px;
-  max-width: 60%;
+  max-width: 100%;
   position: relative;
 }
 

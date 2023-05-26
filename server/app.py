@@ -252,6 +252,11 @@ def handle_get_messages(data):
         rows = cur.fetchall()
         messages = [{"id": row[0], "content": row[1],
                      "author_id": row[2], "timestamp": row[4]} for row in rows]
+        # add username to each message
+        for message in messages:
+            cur.execute("SELECT username FROM users WHERE id=?", (message['author_id'],))
+            username = cur.fetchone()[0]
+            message['username'] = username
         emit('get_messages', {"success": True, "messages": messages})
 
 
@@ -280,6 +285,13 @@ def handle_send_message(data):
                 "author_id": author_id,
                 "timestamp": None  # You may want to add a timestamp field to your messages table
             }
+            #add username to message
+            cur.execute("SELECT username FROM users WHERE id=?", (author_id,))
+            rows = cur.fetchall()
+            if len(rows) > 0:
+                message['username'] = rows[0][0]
+            else:
+                message['username'] = "Unknown"
             # Emit only to the sender
             emit('send_message', {"success": True, "message": message}, room=request.sid)
             # send to all users in list user_channels except the sender
