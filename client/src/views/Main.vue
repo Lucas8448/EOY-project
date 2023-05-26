@@ -25,7 +25,7 @@
     </div>
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message">
-        <p class="message"><span class="username">{{ getUsername(message.author_id) }}</span> : {{ message.content }}</p>
+        <p class="message"><span class="username">{{ message.username }}</span> : {{ message.content }}</p>
       </div>
       <div class="message-input" v-if="currentChannel">
         <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="Type your message...">
@@ -58,6 +58,7 @@
 </template>
 
 <script>
+import { onMounted, ref } from 'vue'
 import { socket } from "../socket";
 import AddServerModal from "../components/AddServerModal.vue";
 import AddChannelModal from "../components/AddChannelModal.vue";
@@ -114,7 +115,9 @@ export default {
       if (data.success) {
         this.messages.push(data.message);
       } else if (data.error) {
-        this.$refs.alertModal.showAlert(data.error);
+        this.$nextTick(() => {
+          this.$refs.alertModal.showAlert(data.error);
+        });
       }
     });
     socket.on("send_message", (data) => {
@@ -124,7 +127,9 @@ export default {
         this.messages.push(data.message);
       } else if (data.error) {
         this.message = ""
-        this.$refs.alertModal.showAlert(data.error);
+        this.$nextTick(() => {
+          this.$refs.alertModal.showAlert(data.error);
+        });
       }
     });
   },
@@ -136,7 +141,9 @@ export default {
           console.log(data);
           this.servers = data.servers
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -146,7 +153,9 @@ export default {
         if (data.success) {
           this.channels = data.channels;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -157,12 +166,20 @@ export default {
         if (data.success) {
           this.messages = data.messages;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
     async sendMessage() {
-      socket.emit("send_message", { content: this.message, channel_id:this.currentChannel });
+      if (this.message == ''){
+        this.$nextTick(() => {
+          this.$refs.alertModal.showAlert("No message content");
+        });
+      } else {
+        socket.emit("send_message", { content: this.message, channel_id: this.currentChannel });
+      }
     },
     async addChannel(channelName) {
       console.log("Adding channel", channelName, this.currentServer)
@@ -172,7 +189,9 @@ export default {
           this.channels = data.channels
           this.showAddChannelModal = false;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -183,13 +202,16 @@ export default {
           this.servers = data.servers
           this.showAddServerModal = false;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
     async changeServer(serverId) {
       this.currentServer = serverId;
       this.currentChannel = null;
+      this.messages = null
       console.log("changed server to:", this.currentServer)
       this.fetchChannels(serverId);
     },
@@ -199,7 +221,9 @@ export default {
         if (data.success) {
           this.searchedUsers = data.users;
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
@@ -209,24 +233,11 @@ export default {
         if (data.success) {
           // handle successful addition of member
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
-    },
-    getUsername(userId) {
-      if (!this.usernames[userId]) {
-        socket.emit("get_username", { userId: userId });
-        socket.on("get_username", (data) => {
-          if (data.success) {
-            this.usernames[userId] = data.username;
-            console.log(this.username)
-          } else if (data.error) {
-            this.usernames[userId] = "Unknown";
-          }
-        });
-        return "Loading...";
-      }
-      return this.usernames[userId];
     }
   },
 };
@@ -310,7 +321,9 @@ export default {
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 10px;
-  overflow: scroll;
+  overflow-y: auto;
+  position: relative;
+  height: calc(100vh - 60px);
 }
 
 .message-input {
@@ -321,23 +334,11 @@ export default {
 
 .message-input input {
   flex: 1;
-  margin-right: 10px;
   border: none;
   border-radius: 4px;
   padding: 8px;
   font-size: 16px;
   outline: none;
-}
-
-.messages {
-  grid-area: 2 / 3 / 3 / 4;
-  background-color: #626262;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding-bottom: 10px;
-  overflow-y: scroll;
-  position: relative;
 }
 
 .message p {
@@ -350,7 +351,7 @@ export default {
   padding: 10px;
   border-radius: 10px;
   margin: 10px;
-  max-width: 60%;
+  max-width: 100%;
   position: relative;
 }
 
@@ -373,7 +374,7 @@ export default {
 }
 
 .nochannel {
-  top: 10vh;
+  top: 190%;
   right: 50%;
   text-align: center;
 }

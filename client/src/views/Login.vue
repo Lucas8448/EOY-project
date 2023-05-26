@@ -303,7 +303,9 @@ export default {
           console.log("Redirecting")
           this.$router.push("/main");
         } else if (data.error) {
-          this.$refs.alertModal.showAlert(data.error);
+          this.$nextTick(() => {
+            this.$refs.alertModal.showAlert(data.error);
+          });
         }
       });
     },
